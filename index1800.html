@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sigaren Catalogus</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif; /* Gebruik Inter font */
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
+            /* Algemene anti-kopiëren maatregelen */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
+        }
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            overflow-x: auto; /* Zorgt voor horizontaal scrollen op kleine schermen voor de tabel */
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            font-weight: 700;
+        }
+        .search-container {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .search-container input[type="text"] {
+            width: 95%;
+            max-width: 550px;
+            padding: 14px 20px;
+            border: 1px solid #c0c0c0;
+            border-radius: 30px;
+            font-size: 1.1em;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        .search-container input[type="text"]:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 10px rgba(0,123,255,0.3);
+        }
+
+        /* Tabel styling */
+        .catalog-table {
+            width: 100%;
+            border-collapse: collapse; /* Zorgt ervoor dat cellen netjes aansluiten */
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 8px; /* Afgeronde hoeken voor de tabel */
+            overflow: hidden; /* Zorgt ervoor dat afgeronde hoeken correct zijn */
+        }
+        .catalog-table th, .catalog-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0; /* Lichte scheidingslijnen tussen rijen */
+        }
+        .catalog-table th {
+            background-color: #34495e; /* Donkere achtergrond voor headers */
+            color: #ffffff;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            position: sticky; /* Sticky headers */
+            top: 0;
+            z-index: 1;
+        }
+        .catalog-table tbody tr:nth-child(even) {
+            background-color: #f8f8f8; /* Afwisselende rijkleuren */
+        }
+        .catalog-table tbody tr:hover {
+            background-color: #e9f5ff; /* Hover effect voor rijen */
+            cursor: pointer;
+        }
+        .catalog-table .price-cell {
+            font-weight: bold;
+            color: #28a745;
+        }
+        .catalog-table .price-cell span {
+            color: #dc3545; /* Voor de eenheidsprijs in de tabel */
+        }
+        .no-results {
+            text-align: center;
+            color: #777;
+            padding: 40px;
+            font-size: 1.2em;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-top: 20px;
+        }
+
+        /* Login Form Styling */
+        .login-container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            margin-top: 50px; /* Center vertically if body is flex column */
+        }
+        .login-container h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+        .login-container input[type="text"],
+        .login-container input[type="password"] {
+            width: calc(100% - 40px);
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border: 1px solid #c0c0c0;
+            border-radius: 30px;
+            font-size: 1.1em;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        .login-container input[type="text"]:focus,
+        .login-container input[type="password"]:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 10px rgba(0,123,255,0.3);
+        }
+        .login-container button {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0,123,255,0.2);
+        }
+        .login-container button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+        .login-container .error-message {
+            color: #dc3545;
+            margin-top: 15px;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        /* Responsieve aanpassingen */
+        @media (max-width: 768px) {
+            .container, .login-container {
+                padding: 20px 15px;
+            }
+            h1 {
+                font-size: 1.8em;
+                margin-bottom: 20px;
+            }
+            .search-container input[type="text"] {
+                padding: 12px 15px;
+                font-size: 1em;
+            }
+            .catalog-table th, .catalog-table td {
+                padding: 10px 12px;
+                font-size: 0.85em;
+            }
+            /* Maak de tabel scrollbaar op kleinere schermen indien nodig */
+            .container {
+                overflow-x: auto;
+            }
+            .catalog-table {
+                min-width: 700px; /* Minimum breedte voor de tabel op kleine schermen */
+            }
+        }
+
+        /* Styles om afdrukken te voorkomen */
+        @media print {
+            body * {
+                visibility: hidden !important;
+            }
+            body::after {
+                content: "Deze catalogus kan niet worden afgedrukt.";
+                visibility: visible !important;
+                position: fixed !important;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 2em;
+                color: #ff0000;
+                background-color: #fff;
+                padding: 30px;
+                border: 3px solid #ff0000;
+                border-radius: 10px;
+                box-shadow: 0 0 20px rgba(255,0,0,0.5);
+                z-index: 9999;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container" id="loginContainer">
+        <h2>Login</h2>
+        <input type="text" id="usernameInput" placeholder="Gebruikersnaam">
+        <input type="password" id="passwordInput" placeholder="Wachtwoord">
+        <button onclick="handleLogin()">Login</button>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <div class="container" id="mainCatalogContainer" style="display: none;">
+        <h1>Sigaren Catalogus</h1>
+
+        <div class="search-container">
+            <input type="text" id="searchInput" onkeyup="filterCatalog()" placeholder="Zoek op merk, land, etc...">
+        </div>
+
+        <div id="catalog-container">
+            <!-- De tabel komt hier -->
+        </div>
+    </div>
+
+    <script>
+        // Voorkom rechtermuisklik en kopiëren (basisbescherming)
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('copy', event => {
+            event.preventDefault();
+            console.log('Kopiëren is niet toegestaan.');
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = 'Kopiëren is niet toegestaan.';
+            messageDiv.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background-color: #ffc107; color: #333; padding: 10px 20px; border-radius: 5px; z-index: 1000; opacity: 0.9;';
+            document.body.appendChild(messageDiv);
+            setTimeout(() => messageDiv.remove(), 3000);
+        });
+        document.addEventListener('selectstart', event => event.preventDefault());
+
+        const csvData = `Brand;Brand 2;Brand 3;Box;€ Unit;€ Box;Size;Country
+DAVIDOFF;SIGNATURE;Ambassadrice;10;10,7;107;;
+DAVIDOFF;SIGNATURE;Petit Corona;25;13,9;347,5;;
+DAVIDOFF;SIGNATURE;2000;25;17,8;445;;
+DAVIDOFF;SIGNATURE;6000;25;22,2;555;;
+DAVIDOFF;SIGNATURE;N°2;25;23;575;;
+DAVIDOFF;SIGNATURE;Toro;25;24,9;622,5;;
+DAVIDOFF;SIGNATURE;Exquisitos;10;38;380;;
+DAVIDOFF;GRAND CRU;No.2;25;21,5;537,5;;
+DAVIDOFF;GRAND CRU;No.3;25;19,5;487,5;;
+DAVIDOFF;GRAND CRU;No.5;5;14,7;73,5;;
+DAVIDOFF;GRAND CRU;Robusto;25;23;575;;
+DAVIDOFF;GRAND CRU;Toro;25;26;650;;
+DAVIDOFF;ANIVERSARIO;Entreacto;20;13;260;;
+DAVIDOFF;ANIVERSARIO;Short Perfecto;4;22;88;;
+DAVIDOFF;ANIVERSARIO;"Special ""R""";25;25;625;;
+DAVIDOFF;ANIVERSARIO;"Special ""T""";20;30;600;;
+DAVIDOFF;ANIVERSARIO;"Double ""R""";20;44;880;;
+DAVIDOFF;MILLENIUM;Short robusto;4;23;92;;
+DAVIDOFF;MILLENIUM;Robusto;25;28;700;;
+DAVIDOFF;MILLENIUM;Piramides;10;32,5;325;;
+DAVIDOFF;NICARAGUA;Short corona;14;13,5;189;;
+DAVIDOFF;NICARAGUA;Robusto BXP;12;21;252;;
+DAVIDOFF;NICARAGUA;Robusto;12;21;252;;
+DAVIDOFF;NICARAGUA;Toro ;12;23,5;282;;
+DAVIDOFF;NICARAGUA;Toro BXP;12;24;288;;
+DAVIDOFF;NICARAGUA;Diadema;4;27,5;110;;
+DAVIDOFF;ESCURIO;Petit Robusto;14;13,5;189;;
+DAVIDOFF;ESCURIO;Robusto;12;21;252;;
+DAVIDOFF;ESCURIO;Grand Perfecto;12;23;276;;
+DAVIDOFF;ESCURIO;Corona Gorda;12;23;276;;
+DAVIDOFF;ESCURIO;Grand Toro;12;24;288;;
+DAVIDOFF;YAMASA;Robusto;12;25,5;306;;
+DAVIDOFF;YAMASA;Toro;12;30;360;;
+DAVIDOFF;YAMASA;Petit Churchill;14;17;238;;
+DAVIDOFF;WINSTON CHURCHILL;Petit Belicoso;4;44;176;;
+DAVIDOFF;WINSTON CHURCHILL;MF Petit Panetela;5;43,5;217,5;;
+DAVIDOFF;WINSTON CHURCHILL;Petit Corona;20;16;320;;
+DAVIDOFF;WINSTON CHURCHILL;Robusto;20;25;500;;
+DAVIDOFF;WINSTON CHURCHILL;Toro ;20;28,5;570;;
+DAVIDOFF;WINSTON CHURCHILL;Churchill;20;29;580;;
+DAVIDOFF;WSC LATE HOUR;L.H P.Panetela;5;49,5;247,5;;
+DAVIDOFF;WSC LATE HOUR;L.H Robusto;20;27,5;550;;
+DAVIDOFF;WSC LATE HOUR;L.H Toro;20;31;620;;
+DAVIDOFF;WSC LATE HOUR;L.H Churchill;20;30;600;;
+DAVIDOFF;PRIMEROS;Primeros;6;39;234;;
+DAVIDOFF;PRIMEROS;Primeros Maduro;6;39;234;;
+DAVIDOFF;PRIMEROS;Nicaragua;6;39;234;;
+DAVIDOFF;PRIMEROS;Nicaragua Maduro;6;39;234;;
+DAVIDOFF;PRIMEROS;Escurio;6;39;234;;
+DAVIDOFF;PRIMEROS;Nicaragua Maduro;2;9;18;;
+DAVIDOFF;SMALL BATCH;Small Batch N°5;10;36;360;;
+DAVIDOFF;SMALL BATCH;Small Batch N°6;10;37;370;;
+DAVIDOFF;SMALL BATCH;Small Batch N°13;10;36;360;;
+DAVIDOFF;MADURO;Toro;20;54;1080;;
+DAVIDOFF;MADURO;Robusto;20;50;1000;;
+DAVIDOFF;MADURO;Short Corona;20;43;860;;
+DAVIDOFF;LIMITED EDITION DAVIDOFF;Oro blanco;1;600;600;;
+DAVIDOFF;LIMITED EDITION DAVIDOFF;Oro blanco 111 ;1;750;750;;
+DAVIDOFF;LIMITED EDITION DAVIDOFF;Royal Release Robusto;10;125;1250;;
+DAVIDOFF;LIMITED EDITION DAVIDOFF;Royal Release Salomones;10;150;1500;;
+DAVIDOFF;LIMITED EDITION DAVIDOFF;N°1 Aniversario ;10;62;620;;
+DAVIDOFF;LIMITED EDITION DAVIDOFF;Grand Cru Dia LE 2024;10;57;570;;
+DAVIDOFF;LIMITED EDITION DAVIDOFF;Year of the Snake ;10;62;620;;
+DAVIDOFF;LIMITED EDITION DAVIDOFF;WSC L.E. 2025 Churchill;10;49;490;;
+AVO;CLASSIC;Classic puritos;10;32;320;;
+AVO;CLASSIC;Robusto;20;12,5;250;;
+AVO;CLASSIC;Toro Grande N°6;20;16;320;;
+AVO;XO;Notturno (corona);20;11;220;;
+AVO;XO;Maestoso (churchill);20;15,5;310;;
+AVO;HERITAGE;robusto;20;12,5;250;;
+AVO;HERITAGE;special toro;20;15;300;;
+AVO;LIMITED EDITION AVO;Seasons Summer L.E;10;23;230;;
+AVO;LIMITED EDITION AVO;Seasons Fall L.E;10;23;230;;
+AVO;LIMITED EDITION AVO;Seasons Winter L.E;10;23;230;;
+AVO;LIMITED EDITION AVO;Expressions L.E.;15;21;315;;
+CAMACHO;;Criollo tubos;10;11;110;;
+CAMACHO;CONNECTICUT;Connecticut Robusto ;20;9,9;198;;
+CAMACHO;CONNECTICUT;Connecticut Toro;20;12;240;;
+CAMACHO;COROJO;Corojo Robusto;20;9,9;198;;
+CAMACHO;COROJO;Corojo Toro;20;12;240;;
+CAMACHO;ECUADOR;Ecuador Robusto;20;9,9;198;;
+CAMACHO;ECUADOR;Ecuador Toro;20;12;240;;
+CAMACHO;ECUADOR;Ecuador Gordo;20;13,5;270;;
+CAMACHO;NICARAGUA ;Robusto;20;9,9;198;;
+CAMACHO;NICARAGUA ;Toro;20;12;240;;
+CAMACHO;NICARAGUA ;Gran Churchill;20;14;280;;
+ZINO;PLATINUM;Scepter XS 10;10;35;350;;
+ZINO;PLATINUM;Z-class corona;5;11;55;;
+ZINO;PLATINUM;Z-class toro;4;14,5;58;;
+ZINO;NICARAGUA;Nic Short Torpedo;25;7,5;187,5;;
+ZINO;NICARAGUA;Nic Robusto;25;7,9;197,5;;
+ZINO;NICARAGUA;Nic Toro;25;8,9;222,5;;
+ZINO;NICARAGUA;Nic Gordo;25;9,9;247,5;;
+ZINO;NICARAGUA;Nic Half Corona Pre-cut;5;29;145;;
+GRIFFIN'S;;Puritos/timbre ;10;30;300;;
+GRIFFIN'S;;Privilège;25;8,9;222,5;;
+GRIFFIN'S;;300;25;12,5;312,5;;
+GRIFFIN'S;;400;5;11,5;57,5;;
+GRIFFIN'S;;500;25;12;300;;
+GRIFFIN'S;;Perfecto;25;13;325;;
+GRIFFIN'S;;Short Robusto;25;11;275;;
+GRIFFIN'S;;Robusto;25;13;325;;
+GRIFFIN'S;;Piramides;4;14;56;;
+GRIFFIN'S;;Toro;25;16,5;412,5;;
+GRIFFIN'S;;Prestige;25;17;425;;
+CUSANO;;Maduro Churchill (BLACK);16;6,3;100,8;;
+CUSANO;BUNDLE SELECTION;Petit Panatela ;16;44;704;;
+CUSANO;BUNDLE SELECTION;Petit Corona;16;44;704;;
+CUSANO;BUNDLE SELECTION;Corona;16;52;832;;
+CUSANO;BUNDLE SELECTION;Short Robusto;16;54;864;;
+CUSANO;BUNDLE SELECTION;Lonsdale;16;56;896;;
+CUSANO;BUNDLE SELECTION;Robusto;16;59;944;;
+CUSANO;BUNDLE SELECTION;Churchill;16;65;1040;;
+CUSANO;BUNDLE SELECTION;Reserva N°14/Lonsdale ;25;6;150;;
+CUSANO;BUNDLE SELECTION;Reserva N°6 / Robusto ;25;7;175;;
+CUSANO;BS  HONDURAS ;Honduras Robusto;16;74;1184;;
+CUSANO;BS  HONDURAS ;Honduras Toro ;16;89;1424;;
+CUSANO;BS  HONDURAS ;Honduras Churchill ;16;86;1376;;
+NEWMAN;BRICKHOUSE;Robusto ;25;10,5;262,5;;
+NEWMAN;BRICKHOUSE;Rob Dbl connecticut;5;13;65;;
+NEWMAN;BRICKHOUSE;Mighty Mighty Maduro;25;13;325;;
+NEWMAN;BRICKHOUSE;Mighty Mighty dbl con;5;15;75;;
+NEWMAN;BRICKHOUSE;Bricktoberfest L.E. ;10;15;150;;
+NEWMAN;QUORUM SHADE ;Short Robusto;10;32;320;;
+NEWMAN;QUORUM SHADE ;Robusto;10;38;380;;
+NEWMAN;QUORUM SHADE ;Churchill;10;39;390;;
+NEWMAN;PERLA DEL MAR ;Shade robusto;25;12;300;;
+NEWMAN;PERLA DEL MAR ;Maduro robusto;25;12;300;;
+NEWMAN;PERLA DEL MAR ;Maduro toro;25;14,5;362,5;;
+NEWMAN;PERLA DEL MAR ;Corojo robusto;25;12;300;;
+NEWMAN;PERLA DEL MAR ;Corojo toro;25;14,5;362,5;;
+CHATEAU DIADEM;;Robusto ;12;12,5;150;;
+CHATEAU DIADEM;;Toro;12;14,9;178,8;;
+CHATEAU DIADEM;;Double Robusto;12;14,9;178,8;;
+CHATEAU DIADEM;;Belicoso;12;15,5;186;;
+CHATEAU DIADEM;;Lanceros ;12;13;156;;
+CORLEONE;;Pizzino;15;12;180;;
+CORLEONE;;Rispetto;15;14;210;;
+CORLEONE;;Lupara;15;14,5;217,5;;
+CORLEONE;;Onore;15;16;240;;
+CORLEONE;;ll Capo;15;18;270;;
+CORLEONE;;Assortiment;24;18,25;438;;
+CORLEONE;;Cig'Art ;10;66;660;;
+CORLEONE;;Liberta L.E. ;10;18,5;185;;
+HORACIO;;H1 Classic (of Year) ;15;17,6;264;;
+HORACIO;;H5 Classic;15;11,5;172,5;;
+HORACIO;;H6 Classic ;15;12;180;;
+HORACIO;;XL;15;15;225;;
+HORACIO;;XXL;15;19,5;292,5;;
+HORACIO;;Jacques Chancel;15;15;225;;
+HORACIO;;Colosso;15;15,5;232,5;;
+HORACIO;;Sled L.E. ;15;15,7;235,5;;
+HORACIO;;Le Coffret;4;16;64;;
+HORACIO;;Heritage N°1;15;14,5;217,5;;
+HORACIO;;Heritage N°6;15;13;195;;
+HORACIO;;Pasion 38 ;16;12,5;200;;
+DAVIDOFF;DAV. PRIMEROS;Primeros;6;39;234;;
+DAVIDOFF;DAV. PRIMEROS;Primeros Madruo;6;39;234;;
+DAVIDOFF;DAV. PRIMEROS;Nicaragua;6;39;234;;
+DAVIDOFF;DAV. PRIMEROS;Nicaragua Maduro;6;36;216;;
+DAVIDOFF;DAV. PRIMEROS;Escurio;6;39;234;;
+DAVIDOFF;DAV. PRIMEROS;Nicaragua Maduro;2;9;18;;
+PDR  ;1878;Roast cafe maduro robusto (20);20;9,9;198;52 X 127;Dom. Rep
+LA RIBERA ;;Tl perla (10);10;32;320;42 X 102;Dom. Rep
+LA RIBERA ;;Tl mareva (10);10;36;360;42 X 140;Dom. Rep
+LA RIBERA ;;Tl robusto (10);10;41;410;50 X 127;Dom. Rep
+LA RIBERA ;;Tl gordo (10);10;44;440;54 X 140;Dom. Rep
+LA RIBERA ;;Tl churchill (10);10;45;450;50 X 178;Dom. Rep
+LA RIBERA ;;Tl magnum (10);10;50;500;60 X 153;Dom. Rep
+LA RIBERA ;;Tl mateo (10);10;44;440;60 X 102;Dom. Rep
+LA RIBERA ;;Nicaragua robusto (10);10;41;410;50 X 127;Nicaragua
+LA RIBERA ;;Nicaragua gordo (10);10;44;440;54 X 140;Nicaragua
+LA RIBERA ;;Nicaragua magnum (10);10;50;500;60 X 153;Nicaragua
+LA RIBERA ;;Edicion nicaragua robusto (28);28;5,5;154;52 X 127;Dom. Rep
+PDR ;;El criollito half corona (24);24;5,2;124,8;50 X 89;Dom. Rep
+PDR;; el criollito robusto (24);24;5,8;139,2;54 X 127;Dom. Rep
+PDR ;;El criollito double magnum (24);24;6,5;156;60 X 153;Dom. Rep
+PDR ;;El criollito setenta (24);24;8,5;204;70 X 178;Dom. Rep
+PDR ;1878;Double capa magnum sun grown (20);20;10,5;210;60 X 153;Dom. Rep
+PDR ;;El criollito short gordo (24);20;5,8;116;58 X 108;Dom. Rep
+PDR ;;El criollito 5 robusto fresh pack (25);25;27,5;687,5;50 X 127;Dom. Rep
+PDR ;A. FLORES;Gr reserva desflorado half corona tin 5;25;30;750;46 X 89;Dom. Rep
+COYOTE;;Intenso del coyote (28);28;6,8;190,4;50 X 121;Dom. Rep
+PDR ;A. FLORES;Gr reserva corojo half corona (24);24;6,2;148,8;46 X 89;Dom. Rep
+PDR ;A. FLORES;Gr reserva desflorado half corona (24);24;6,2;148,8;46 X 89;Dom. Rep
+PDR ;A. FLORES;Gr reserva sun grown half corona (24);24;6,2;148,8;46 X 89;Dom. Rep
+PDR ;1878;Double capa robusto sun grown (20);20;9,5;190;52 X 127;Dom. Rep
+PDR ;A. FLORES  Y RODR 10TH ANNIV.;Wide churchill (24);24;13,5;324;58 X 131;Dom. Rep
+PDR ;A. FLORES  Y RODR 10TH ANNIV.;Robusto (24);24;12,5;300;52 X 127;Dom. Rep
+PDR ;A. FLORES  Y RODR 10TH ANNIV.;Gran toro (24);24;14,5;348;54 X 153;Dom. Rep
+PDR ;A. FLORES  Y RODR 10TH ANNIV.;Milfleurs (24);24;6,8;163,2;42 X 127;Dom. Rep
+PDR ;1878;Double capa robusto natural (20);20;9,5;190;52 X 127;Dom. Rep
+PDR ;1878;Double capa magnum natural (20);20;10,5;210;60 X 153;Dom. Rep
+MY FATHER ;TATTOO ;Adivino toro (10);10;8,9;89;58 X 140;Nicaragua
+MY FATHER ;FLOR DE LAS ANTILLAS ;Robusto (20);20;14;280;50 X 127;Nicaragua
+MY FATHER ;FLOR DE LAS ANTILLAS ;Toro (20);20;14,5;290;52 X 153;Nicaragua
+MY FATHER ;TATUAJE ;Gran cojonu (12);12;22;264;60 X 166;Nicaragua
+MY FATHER ;PEPIN GARCIA ;Blue invictos (24);24;16;384;50 X 127;Nicaragua
+MY FATHER ;PEPIN GARCIA ;Blue lanceros (24);24;16;384;38 X 191;Nicaragua
+MY FATHER ;LE BIJOU ;Petit robusto (23);23;14,9;342,7;50 X 115;Nicaragua
+MY FATHER ;LE BIJOU ;Grand robusto (23);23;20;460;55 X 143;Nicaragua
+MY FATHER ;LE BIJOU ;Torpedo box pressed (23);23;22;506;52 X 156;Nicaragua
+MY FATHER ;THE JUDGE ;Grand robusto box pressed (23);23;22;506;60 X 127;Nicaragua
+MY FATHER ;LA OPULENCIA;Toro (20);20;22;440;54 X 153;Nicaragua
+MY FATHER ;LA GRAN OFERTA ;Robusto (20);20;16;320;50 X 127;Nicaragua
+MY FATHER ;FLOR DE LA ANTILLAS ;Maduro petit robusto (20);20;14;280;50 X 115;Nicaragua
+MY FATHER ;LA PROMESA ;Robusto grande (20);20;17;340;54 X 134;Nicaragua
+GURKHA;CELLAR RESERVE ;21 year sola db robusto (20);20;22;440;58 X 153;Nicaragua
+GURKHA;GHOST ;Gold shadow (21);21;12,5;262,5;52 X 127;Dom. Rep
+GURKHA;CELLAR; reserve 15 years koi (20);20;14,9;298;58 X 102;Dom. Rep
+GURKHA;CELLAR;Reserve 15 years solara (20);20;17,5;350;58 X 127;Dom. Rep
+GURKHA;CELLAR;Reserve 18 years solara (20);20;19,5;390;58 X 127;Dom. Rep
+GURKHA;HERITAGE;Robusto corto (24);24;10,9;261,6;48 X 115;Nicaragua
+GURKHA;HERITAGE;Robusto (24);24;14,5;348;55 X 127;Nicaragua
+GURKHA;HERITAGE;Toro (24);24;16;384;54 X 166;Nicaragua
+GURKHA;REVENANT ;Corojo robusto (20);20;13,5;270;50 X 127;Dom. Rep
+GURKHA;LEGEND 1959 ;Robusto (20);20;10,5;210;54 X 127;Dom. Rep
+GURKHA;LEGEND 1959 ;Toro (20);20;10,9;218;50 X 153;Dom. Rep
+LA FLOR DOMINICANA;;Dl-600 maduro (20);20;12,9;258;52 X 134;Dom. Rep
+LA FLOR DOMINICANA;;Dl-700 maduro (20);20;14,5;290;60 X 159;Dom. Rep
+LA FLOR DOMINICANA;;Dl-digger maduro (20);20;17;340;60 X 216;Dom. Rep
+LA FLOR DOMINICANA;;La nox (20);20;22;440;50 X 166;Dom. Rep
+LA FLOR DOMINICANA;;L-granu (100);100;15,5;1550;64 X 153;Dom. Rep
+LA FLOR DOMINICANA;;Salomon unico (10);10;45;450;64 X 178;Dom. Rep
+LA FLOR DOMINICANA;;Dl-654 maduro (20);20;13,5;270;54 X 153;Dom. Rep
+LA FLOR DOMINICANA;;Cameroon number 4 (24);24;12,9;309,6;54 X 159;Dom. Rep
+LA FLOR DOMINICANA;;Cameroon number 5 (24);24;11,5;276;52 X 127;Dom. Rep
+LA FLOR DOMINICANA;;Ligero tcfka-m natural (5);5;22;110;55 X 178;Dom. Rep
+LA FLOR DOMINICANA;;Res. esp. el jocko natural (24);24;11,5;276;54 X 115;Dom. Rep
+LA FLOR DOMINICANA;;La volcada (20);20;24;480;48 X 178;Dom. Rep
+LA FLOR DOMINICANA;;L-500 oscuro natural (24);24;14;336;60 X 147;Dom. Rep
+LA FLOR DOMINICANA;;Andalousian bull (10);10;28;280;64 X 178;Dom. Rep
+EP. CARRILLO;;Inch 70 maduro (24);24;20;480;70 X 178;Dom. Rep
+EP. CARRILLO;;Inch 62 maduro (24);24;14,5;348;62 X 127;Dom. Rep
+EP. CARRILLO;;La historia e-iii (20);20;19;380;54 X 175;Dom. Rep
+EP. CARRILLO;;Encore majestic (20);20;19;380;52 X 137;Nicaragua
+EP. CARRILLO;;The pledge prequel (20);20;18,5;370;50 X 127;Nicaragua
+EP. CARRILLO;;Encore el primero (20);20;20;400;54 X 175;Nicaragua
+EP. CARRILLO;;Allegiance siedekick (20);20;17;340;50 X 127;Nicaragua
+EP. CARRILLO;;Allegiance confidant (20);20;18,5;370;52 X 153;Nicaragua
+EP. CARRILLO;;Allegiance wingman (20);20;19;380;54 X 175;Nicaragua
+EP. CARRILLO;;Allegiance chaperone (20);20;19,5;390;58 X 159;Nicaragua
+ASHTON;VSG ;Robusto (24);24;18,5;444;50 X 140;Dom. Rep
+ASHTON;PARADISO ;Papagayo (21);21;14;294;54 X 134;Nicaragua
+ASHTON;PARADISO ;Revelation prophet (24);24;12,9;309,6;54 X 134;Nicaragua
+ASHTON;PARADISO;Revelation odyssey (24);24;14,5;348;60 X 147;Nicaragua
+ASHTON;PARADISO ;Revelation leviathan (24);24;14,9;357,6;64 X 159;Nicaragua
+ASHTON;ASHTON CLASSIC ;Magnum (25);25;16;400;50 X 127;Dom. Rep
+ASHTON;LA AROMA DEL CARIBE ;El jefe (24);24;13,5;324;58 X 178;Nicaragua
+ASHTON;PARADISO ;Quintessence epicure (24);24;14,5;348;52 X 153;Nicaragua
+ASHTON;PARADISO ;Quintessence majestic (24);24;15,5;372;60 X 153;Nicaragua
+ASHTON;ASHTON CLASSIC ;Churchill (25);25;20;500;52 X 191;Dom. Rep
+ASHTON;LA AROMA DEL CARIBE;Mi amor valentino (25);25;14,5;362,5;60 X 153;Nicaragua
+ASHTON;LA AROMA DEL CARIBE;Immensa (24);24;12,5;300;50 X 147;Nicaragua
+ASHTON;LA AROMA DEL CARIBE ;Robusto (24);24;11,9;285,6;54 X 134;Nicaragua
+ASHTON;LA AROMA DEL CARIBE;Edicion especial  #2 (25);25;13,5;337,5;50 X 127;Nicaragua
+ASHTON;LA AROMA DEL CARIBE ;Edicion especial #60 (25);25;14,5;362,5;60 X 153;Nicaragua
+ASHTON;ASHTON PASION ;Corona gorda (25);25;14;350;46 X 131;Nicaragua
+ASHTON;ASHTON PASION ;Encanto (25);25;17;425;60 X 153;Nicaragua
+ASHTON;ASHTON PASION ;Marveloso (25);25;16,5;412,5;52 X 153;Nicaragua
+ASHTON;ASHTON PASION ;Robusto (25);25;14,5;362,5;50 X 140;Nicaragua
+ASHTON;PARADISO ;Elegancia grandioso (25);25;14,5;362,5;60 X 153;Nicaragua
+ASHTON;PARADISO ;Elegancia robusto (25);25;12,9;322,5;50 X 127;Nicaragua
+ASHTON;PARADISO ;Elegancia churchill (25);25;14;350;50 X 178;Nicaragua
+ASHTON;PARADISO  ;Papagayo xxl (24);24;14,5;348;60 X 153;Nicaragua
+Caldwell;BLIND MANS BLUFF ;Maduro toro (20);20;12,5;250;52 X 153;Dom. Rep
+NICARAO ;ANNO VI ;Minuto (20);20;9,2;184;42 X 127;Nicaragua
+NICARAO ;ANNO VI ;Robusto (20);20;9,9;198;50 X 105;Nicaragua
+NICARAO ;ESPECIAL ;Toro (21);21;13,5;283,5;52 X 153;Nicaragua
+NICARAO ;EXCLUSIVO ;Robusto extra (20);20;19,5;390;58 X 140;Nicaragua
+NICARAO ;ESPECIAL ;Torito (21);21;12,5;262,5;54 X 115;Nicaragua
+NICARAO ;ESPECIAL ;Toro doble (21);21;14,5;304,5;58 X 140;Nicaragua
+LA LEY ;;Mareva (21);21;14;294;44 X 102;Nicaragua
+LA LEY ;;Robusto (21);21;16;336;54 X 127;Nicaragua
+NICARAO ;EXCLUSIVO ;Don rafa (20);20;21;420;54 X 178;Nicaragua
+FURIA ;;Megaera (10);10;19;190;54 X 140;Nicaragua
+FURIA ;;Alecto (10);10;18,5;185;56 X 115;Nicaragua
+FURIA ;;Tisiphone (10);10;20;200;58 X 166;Nicaragua
+LA LEY ;;Canonazo (21);21;17;357;52 X 156;Nicaragua
+NICARAO ;ANNO VI ;Julieta (20);20;13,5;270;50 X 178;Nicaragua
+NICARAO ;ESPECIAL ;Gordo (21);21;13,5;283,5;56 X 127;Nicaragua
+NICARAO ;ANNO VI ;Gordito (20);20;9,9;198;50 X 105;Nicaragua
+LA LEY ;;Reserva 2018 exquisito (21);21;18;378;48 X 120;Nicaragua
+NICARAO ;ESPECIAL ;Reserva 2017 robusto (21);21;19;399;52 X 127;Nicaragua
+LA PREFERIDA ;;452 (16);16;14,5;232;52 X 102;Nicaragua
+LA PREFERIDA ;;552 (16);16;15,5;248;52 X 127;Nicaragua
+NICARAO ;EXCLUSIVO ;Robusto e4 (20);20;17,5;350;50 X 127;Nicaragua
+LA PREFERIDA ;;652 (16);16;16,5;264;52 X 1423;Nicaragua
+NICARAO;EXCLUSIVO ;Diadema (20);20;33;660;55 X 232;Nicaragua
+HIRAM & SOLOMON;;Entered apprentice toro (20) ;20;14,9;298;52 X 153;Nicaragua
+HIRAM & SOLOMON;;Master mason toro (20) ;20;14,9;298;52 X 153;Nicaragua
+HIRAM & SOLOMON;;Traveling man toro (20) ;20;14,9;298;52 X 153;Nicaragua
+AJ FERNANDEZ;AGING ROOM ;Habano maestro bp (20);20;16,5;330;52 X 153;Nicaragua
+AJ FERNANDEZ;ENCLAVE ;Habano robusto (20);20;11,9;238;52 X 127;Nicaragua
+AJ FERNANDEZ;LAST CALL ;Habano geniales (25);25;10,5;262,5;48 X 115;Nicaragua
+AJ FERNANDEZ;SAN LOTANO ;Requiem habano robusto (20);20;12,9;258;54 X 127;Nicaragua
+AJ FERNANDEZ;AGING ROOM ;Habano vibrato (20);20;17;340;54 X 153;Nicaragua
+AJ FERNANDEZ;ENCLAVE ;Connecticut robusto (20);20;11,9;238;52 X 127;Nicaragua
+AJ FERNANDEZ;ENCLAVE ;Connecticut figurado (20);20;12,9;258;52 X 166;Nicaragua
+AJ FERNANDEZ;NEW WORLD ;Dorado figurado (10);10;22;220;56 X 153;Nicaragua
+AJ FERNANDEZ;NEW WORLD ;Gold sampler pack (5);5;115;575;;Nicaragua
+QUESADA  ;CASA MAGNA ;Colorado robusto (27);27;10,5;283,5;52 X 140;Nicaragua
+QUESADA  ;CASA MAGNA ;Colorado pikito (55);55;8,9;489,5;42 X 121;Nicaragua
+QUESADA  ;CASA MAGNA ;Colorado gran toro (27);27;11,5;310,5;58 X 153;Nicaragua
+QUESADA  ;CASA MAGNA ;Colorado torito (27);27;10,9;294,3;60 X 121;Nicaragua
+QUESADA  ;CASA MAGNA ;Liga f robusto (10);20;10,9;218;54 X 127;Dom. Rep
+QUESADA  ;CASA MAGNA ;Liga f toro (10) ;20;11,5;230;52 X 153;Dom. Rep
+QUESADA  ;CASA MAGNA ;Connecticut robusto (20);20;12,5;250;50 X 127;Nicaragua
+QUESADA  ;CASA MAGNA ;Connecticut toro (20);20;16;320;52 X 166;Nicaragua
+LA AURORA;;1495 robusto (20);20;11,9;238;50 X 127;Dom. Rep
+LA AURORA;;1495 sumo short robusto (25);25;10,9;272,5;58 X 102;Dom. Rep
+LA AURORA;;Preferido gold (8);8;220;1760;54 X 127;Dom. Rep
+LA AURORA;;Preferido ruby (8);8;220;1760;54 X 127;Dom. Rep
+ESCOBAR;;Natural robusto (25);25;16,5;412,5;50 X 127;Nicaragua
+ESCOBAR;;Natural double toro gordo (25);25;17,5;437,5;56 X 153;Nicaragua
+ESCOBAR;;Natural distinguidos romeo (25);25;17,5;437,5;52 X 162;Nicaragua
+ESCOBAR;;Natural churchill (25);25;18,5;462,5;50 X 178;Nicaragua
+ASYLUM ;;Nine 90x9 (1);1;55;55;90 X 229;Nicaragua
+ASYLUM ;;13 6ixty 9ine x 4our (20);20;12,9;258;69 X 102;Nicaragua
+C.L.E.;EIROA ;The first 20 years toro prensado (20);20;19;380;54 X 153;Nicaragua
+C.L.E.;;Corojo robusto (25);25;11,9;297,5;50 X 127;Nicaragua
+C.L.E.;;Prieto robusto box pressed (25);25;11,9;297,5;50 X 127;Nicaragua
+ASYLUM ;;Insidious robusto (25);25;11,9;297,5;50 X 127;Nicaragua
+ASYLUM ;;13 super goliath (20);20;22;440;80 X 204;Nicaragua
+ASYLUM ;;13 nicaragua goliath (20);20;18;360;80 X 153;Nicaragua
+ASYLUM ;;13 nicaragua hercule (20);20;16;320;70 X 178;Nicaragua
+OLIVA;SERIE V;Lancero;24;12,8;307,2;38 X 178;Nicaragua
+OLIVA;SERIE V;Dbl robusto ;24;13,5;324;54 X 127;Nicaragua
+OLIVA;SERIE V;Maduro dbl robusto ;10;13,5;135;54 X 127;Nicaragua
+OLIVA;SERIE V;Torpedo;24;15;360;56 X 153;Nicaragua
+OLIVA;SERIE V;Dbl toro;24;15;360;60 X 153;Nicaragua
+OLIVA;SERIE V;Churchill;24;15;360;52 X 178;Nicaragua
+OLIVA;SERIE V;Maduro dbl toro;10;15;150;60 X 153;Nicaragua
+OLIVA;SERIE V;Belicoso;24;13,5;324;54 X 127;Nicaragua
+OLIVA;SERIE V;N°4;24;12,3;295,2;43 X 127;Nicaragua
+OLIVA;SERIE V MELANIO;N°4;10;16,5;165;43 X 127;Nicaragua
+OLIVA;SERIE V MELANIO;Robusto (10);10;18,5;185;52 X 127;Nicaragua
+OLIVA;SERIE V MELANIO;Figurado (10);10;22,5;225;52 X 166;Nicaragua
+OLIVA;SERIE V MELANIO;Maduro torpedo;10;21,5;215;52 X 166;Nicaragua
+OLIVA;SERIE O;Sungrown robusto;20;9,5;190;50 X 127;Nicaragua
+OLIVA;SERIE O;Sungrown double toro;10;11,9;119;60 X 153;Nicaragua
+OLIVA;SERIE G;Double robusto;25;7,8;195;54 X 127;Nicaragua
+OLIVA;SERIE G;Toro;25;7,8;195;50 X 153;Nicaragua
+OLIVA;SERIE G;Churchill;25;8;200;50 X 178;Nicaragua
+OLIVA;SERIE G;Special g aged cameroon;25;6,7;167,5;48 X 96;Nicaragua
+OLIVA;CONNECTICUT RESERVE;Robusto;20;10,3;206;50 X 127;Nicaragua
+OLIVA;CONNECTICUT RESERVE;Dbl toro;10;12,5;125;60 X 153;Nicaragua
+OLIVA;CONNECTICUT RESERVE;Petit corona;30;6,7;201;50 X 127;Nicaragua
+OLIVA;ASSORTIMENT;Oliva sampler serie v;5;68;340;;Nicaragua
+OLIVA;ASSORTIMENT;Sampler oliva robusto;5;62;310;;Nicaragua
+OLIVA;LIMITADAS;Country edition;10;25;250;;Nicaragua
+OLIVA;LIMITADAS;Oliva serie v 135 años ;12;20;240;;Nicaragua
+ALIADOS ORIGINAL BLEND;;Robusto;20;9;180;50 X 127;
+ALIADOS ORIGINAL BLEND;;Toro;20;10;200;52 X 153;
+ALIADOS ORIGINAL BLEND;;Torpedo;20;10,5;210;54 X 153;
+ALIADOS ORIGINAL BLEND;;Churchill;20;9,5;190;50 X 178;
+ALIADOS ORIGINAL BLEND;;Regordo;20;11;220;60 X 153;
+NUB;;Cameroon;24;10;240;60 X 102;
+NUB;;Sun grown;24;11,2;268,8;60 X 102;
+NUB;;Sun grown;24;12;288;66 X 102;
+NUB;;Connecticut;24;11,2;268,8;60 X 102;
+NUB;;Connecticut torpedo;24;12;288;64 X 102;
+NUB;;Maduro;24;12;288;60 X 102;
+NUB;;Samp 4 tubos;4;48,4;193,6;;
+CAIN;;Daytona;24;11,5;276;50 X 127;
+CAIN;;Daytona;24;13,9;333,6;60 X 153;
+CAIN;;F straight ligero;24;13,9;333,6;60 X 153;
+CAIN;;F;24;9,2;220,8;50 X 147;
+FLOR DE OLIVA;;Maduro robusto;25;6,6;165;50 X 127;
+FLOR DE OLIVA;;Maduro toro;25;7;175;50 X 153;
+FLOR DE OLIVA;;Caja;25;5,9;147,5;50 X 127;
+FLOR DE OLIVA;;Toro;25;6,2;155;50 X 178;
+FLOR DE OLIVA;;Churchill;25;6,2;155;50 X 178;
+FLOR DE OLIVA;;Torpedo caja;25;6;150;;
+PERDOMO;10TH ANNIVERSARY;Connecticut robusto;25;14,5;362,5;54 X 127;Nicaragua
+PERDOMO;10TH ANNIVERSARY;Connecticut epicure;25;15,25;381,25;54 X 153;Nicaragua
+PERDOMO;10TH ANNIVERSARY;Connecticut super toro;25;16,5;412,5;60 X 153;Nicaragua
+PERDOMO;10TH ANNIVERSARY;Sun grown robusto;25;14,5;362,5;54 X 127;Nicaragua
+PERDOMO;10TH ANNIVERSARY;Sun grown epicure;25;15,25;381,25;54 X 153;Nicaragua
+PERDOMO;10TH ANNIVERSARY;Sun grown super toro;25;16,5;412,5;60 X 153;Nicaragua
+PERDOMO;10TH ANNIVERSARY;Maduro robusto;25;14,5;362,5;54 X 127;Nicaragua
+PERDOMO;10TH ANNIVERSARY;Maduro epicure;25;15,25;381,25;54 X 153;Nicaragua
+PERDOMO;10TH ANNIVERSARY;Maduro super toro;25;16,5;412,5;60 X 153;Nicaragua
+PERDOMO;20TH ANNIVERSARY ;Sun grown gordo;24;17,5;420;60 X 153;Nicaragua
+PERDOMO;20TH ANNIVERSARY ;Maduro gordo;24;17,5;420;60 X 153;Nicaragua
+PERDOMO;30TH ANNIVERSARY;Connecticut robusto;30;20;600;54 X 127;Nicaragua
+PERDOMO;30TH ANNIVERSARY;Sun grown robusto;30;20;600;54 X 127;Nicaragua
+PERDOMO;DOUBLE AGED 12YEAR VINTAGE;Connecticut robusto;24;19;456;56 X 127;Nicaragua
+PERDOMO;DOUBLE AGED 12YEAR VINTAGE;Sun grown robusto;24;19;456;56 X 127;Nicaragua
+PERDOMO;DOUBLE AGED 12YEAR VINTAGE;Maduro robusto;24;19;456;56 X 127;Nicaragua
+PERDOMO;DOUBLE AGED 12YEAR VINTAGE;Sun grown gordo extra;24;21,5;516;60 X 166;Nicaragua
+PERDOMO;DOUBLE AGED 12YEAR VINTAGE;Maduro gordo extra;24;21,5;516;60 X 166;Nicaragua
+PERDOMO;FRESCO;Connecticut toro;25;7,75;193,75;50 X 153;Nicaragua
+PERDOMO;LOT 23 ;Connecticut gordito;24;12,5;300;60 X 115;Nicaragua
+PERDOMO;LOT 23 ;Sun grown gordito;24;12,5;300;60 X 115;Nicaragua
+PERDOMO;CONNOISSEURS COLLECTION;Connecticut epicure;12;16,67;200;54 X 153;Nicaragua
+PERDOMO;CONNOISSEURS COLLECTION;Sun grown epicure;12;16,67;200;54 X 153;Nicaragua
+PERDOMO;CONNOISSEURS COLLECTION;Maduro epicure;12;16,67;200;54 X 153;Nicaragua
+PERDOMO;CONNOISSEURS COLLECTION;Award-winning epicure;12;16,67;200;54 X 153;Nicaragua
+AGANORSA LEAF;JFR LUNATIC ;Habano  short robusto;28;9,75;273;52 X 115;Nicaragua
+AGANORSA LEAF;JFR LUNATIC ;Maduro short robusto;28;9,75;273;52 X 115;Nicaragua
+AGANORSA LEAF;JFR LUNATIC TORCH;Corojo visionaries;10;13;130;52 X 166;Nicaragua
+AGANORSA LEAF;JFR LUNATIC LOCOS;Corojo/maduro el loquito;10;13;130;60 X 121;Nicaragua
+AGANORSA LEAF;JFR COROJO;Corojo super toro;50;9,75;487,5;52 X 166;Nicaragua
+AGANORSA LEAF;JFR MADURO;Maduro super toro;50;9,75;487,5;52 X 166;Nicaragua
+AGANORSA LEAF;GARDIAN OF THE FARM RAMBO;Corojo panatella;25;8;200;48 X 115;Nicaragua
+AGANORSA LEAF;CASA FERNANDEZ MIAMI 2014;Corojo torpedo;10;11;110;52 X 159;Nicaragua
+AGANORSA LEAF;SUPREME LEAF ;Corojo robusto;10;11;110;52 X 127;Nicaragua
+AGANORSA LEAF;RARE LEAF;Corojo robusto;15;11;165;52 X 127;Nicaragua
+KRISTOFF CIGARS;COROJO LIMITADA;Corojo robusto;20;13;260;50 X 127;Dom. Rep
+KRISTOFF CIGARS;SAN ANDRES;San andrés churchill;20;9;180;50 X 178;Dom. Rep
+KRISTOFF CIGARS;VENGEANCE;Connecticut perfecto;20;9,5;190;60 X 166;Dom. Rep
+OSCAR VALADARES;LEAF BY OSCAR ;Connecticut toro;20;16,5;330;52 X 153;Honduras
+OSCAR VALADARES;LEAF BY OSCAR;Corojo toro;20;16,5;330;52 X 153;Honduras
+OSCAR VALADARES;LEAF BY OSCAR;Maduro toro;20;16,5;330;52 X 153;Honduras
+OSCAR VALADARES;LEAF BY OSCAR;Sumatra toro;20;16,5;330;52 X 153;Honduras
+OSCAR VALADARES;LEAF BY OSCAR 10anniversari;Criollo toro;20;16,5;330;52 X 153;Honduras
+OSCAR VALADARES;LEAF BY OSCAR THE WOODY;50cm (4uur) super gigantes;1;70;70;100 X 534;Honduras
+OSCAR VALADARES;THE OSCAR  ;Connecticut robusto;11;17,5;192,5;50 X 127;Honduras
+OSCAR VALADARES;THE OSCAR  ;Habano robusto;11;17,5;192,5;50 X 127;Honduras
+OSCAR VALADARES;THE OSCAR  ;Maduro robusto;11;17,5;192,5;50 X 127;Honduras
+OSCAR VALADARES;2012 BY OSCAR  box pressed ;Connecticut short robusto;20;12;240;50 X 102;Honduras
+OSCAR VALADARES;2012 BY OSCAR  box pressed ;Connecticut toro;20;14;280;52 X 153;Honduras
+OSCAR VALADARES;2012 BY OSCAR box pressed ;Corojo short robusto;20;12;240;50 X 102;Honduras
+OSCAR VALADARES;2012 BY OSCAR box pressed ;Corojo toro;20;14;280;52 X 153;Honduras
+OSCAR VALADARES;2012 BY OSCAR box pressed ;Maduro short robusto;20;12;240;50 X 102;Honduras
+OSCAR VALADARES;2012 BY OSCAR box pressed ;Maduro toro;20;14;280;52 X 153;Honduras
+OSCAR VALADARES;CISERON;Sun grown toro;20;17;340;52 X 153;Honduras
+OSCAR VALADARES;WILD HUNTER;Hab. corojo toro;20;17;340;52 X 153;Honduras
+OSCAR VALADARES;HEAVEN & HELL;Connecticut toro;20;17;340;52 X 153;Honduras
+OSCAR VALADARES;HEAVEN & HELL;Oscuro toro;20;17;340;52 X 153;Honduras
+OSCAR VALADARES;ALTAR Q;Rosado toro;16;18;288;52 X 153;Honduras
+OSCAR VALADARES;SUPER FLY;Maduro super gordo;20;20;400;60 X 166;Honduras
+OSCAR VALADARES;10th ANNIVERSARY;Maduro/candela salomones;10;31;310;60 X 178;Honduras
+OSCAR VALADARES;RAW DOG;None short robusto;50;11,55;577,5;60 X 127;Honduras
+OSCAR VALADARES;ISLAND JIM;Connecticut torpedo;21;17,5;367,5;52 X 166;Honduras
+OSCAR VALADARES;ISLAND JIM san andres;Maduro torpedo;21;17,5;367,5;52 X 166;Honduras
+OSCAR VALADARES;ISLAND JIM;Corojo torpedo;21;17,5;367,5;52 X 166;Honduras
+OSCAR VALADARES;SANTIAGO;Petit toro;10;32;320;50 X 153;Honduras
+OSCAR VALADARES;SANTIAGO;Robusto magico;10;36;360;52 X 147;Honduras
+PRINCIPLE CIGARS;ACCOMPLICE ;Classic toro / tin ;5;14;70;52 X 153;Dom. Rep
+PRINCIPLE CIGARS;BAD PRINCIPLES;Connecticut petite corona /box;5;14,4;72;44 X 127;Dom. Rep
+PRINCIPLE CIGARS;ANGELIQUE;Mareva /tin;5;11,55;57,75;42 X 131;Dom. Rep
+VILLA VIEJA;CLASICO ;Habano short;20;10;200;46 X 115;Nicaragua
+DON DUARTE;RESERVA PRIVADA FUERTE;Maduro piramide;24;12;288;52 X 156;Nicaragua
+DON DUARTE;CLASSICO GOLDEN ANCHO;Shade grown ancho;24;10;240;60 X 102;Nicaragua
+GLOBAL PREMIUM CIGARS 1502;RUBY – wooden box;Dark ecuador torpedo;20;18;360;52 X 166;Nicaragua
+GLOBAL PREMIUM CIGARS 1502;BLUE SAPPHIRE – individ boxs;Toro gordo;20;22;440;52 X 153;Nicaragua
+GLOBAL PREMIUM CIGARS 1502;ANIVERSARIO - wooden box;Toro;10;25,5;255;50 X 153;Nicaragua
+GLOBAL PREMIUM CIGARS 1502;XO - wooden box;Salomon;4;56;224;58 X 178;Nicaragua
+ROMA CRAFT;INTEMPERANCE VO IZZY EINSTEIN; ;30;11,55;346,5;46 X 102;Nicaragua
+ROMA CRAFT;INTEMPERANCE VO BELLE LIVINGSTONE;Rothschild;24;13;312;52 X 115;Nicaragua
+ROMA CRAFT;AQUITAINE KNUCKLE DRAGGER; ;24;14;336;52 X 102;Nicaragua
+ROMA CRAFT;AGUITAINE MODE 5;Short perfecto;24;14,5;348;50 X 127;Nicaragua
+VALENTINO SIESTO CIGARS;GREEN 1971;Connecticut robusto;20;16,5;330;52 X 127;Dom. Rep
+VALENTINO SIESTO CIGARS;GREEN 1971;Connecticut toro;20;19;380;52 X 153;Dom. Rep
+VALENTINO SIESTO CIGARS;GREEN 1971;Connecticut pico pato;20;21;420;54 X 153;Dom. Rep
+VALENTINO SIESTO CIGARS;RED sun grown;Habano robusto;20;16,5;330;52 X 127;Dom. Rep
+VALENTINO SIESTO CIGARS;RED sun grown;Habano toro;20;19;380;52 X 153;Dom. Rep
+VALENTINO SIESTO CIGARS;RED sun grown;Habano torpedo;20;21;420;54 X 153;Dom. Rep
+VALENTINO SIESTO CIGARS;BLACK;Maduro robusto;20;16,5;330;52 X 127;Dom. Rep
+VALENTINO SIESTO CIGARS;EL LIBRO LEYENDA; ;32;93,75;3000;;Dom. Rep
+VALENTINO SIESTO CIGARS;MANOS DE PIEDRA ROUND 1;Robusto;30;76,67;2300;52 X 127;Dom. Rep
+VEGAS DE SANTIAGO;D8 Petit Robusto;Colorado petit robusto;20;9,75;195;50 X 102;Costa Rica
+VEGAS DE SANTIAGO;D8 Robusto;Colorado robusto;20;10,5;210;50 X 127;Costa Rica
+VEGAS DE SANTIAGO;D8 Emperador;Colorado gordo;20;13,75;275;60 X 153;Costa Rica
+ALFAMBRA;BOUTIQUE;Sun grown robusto;25;7,8;195;50 X 127;Nicaragua
+ALFAMBRA;SELECCION Robusto;Habano 2000 robusto;25;6,3;157,5;50 X 127;Nicaragua
+ALFAMBRA;SELLECION Petit 52;Habano 2000 petit 52;25;6,8;170;52 X 102;Nicaragua
+ARTURO FUENTE;Anejo No50 robusto Maduro  ;;25;33;825;50 X 133;Dom. Rep
+ARTURO FUENTE;Anejo No77 Shark  ;;20;38;760;50 X 149;Dom. Rep
+ARTURO FUENTE;Chateau Fuente Cuban Belicoso  ;;24;19;456;52 X 146;Dom. Rep
+ARTURO FUENTE;Chateau Fuente King B  ;;18;25;450;55 X 152;Dom. Rep
+ARTURO FUENTE;Chateau Fuente Natural  ;;20;15;300;50 X 114;Dom. Rep
+ARTURO FUENTE;Chateau Fuente Sun Grown  ;;20;15;300;50 X 114;Dom. Rep
+ARTURO FUENTE LTDX;Dc The Mans 80Th/ Eye Of The Shark   Ltdx;;20;39;780;52 X 159;Dom. Rep
+ARTURO FUENTE LTDX;Destino Al Siglo De Amistad  ;;13;50;650;50 X 127;Dom. Rep
+ARTURO FUENTE LTDX;Destino Al Siglo De Familias  ;;13;53;689;47 X 156;Dom. Rep
+ARTURO FUENTE;Don Carlos Double robusto  ;;25;28;700;52 X 145;Dom. Rep
+ARTURO FUENTE;Don Carlos robusto  ;;25;26;650;50 X 125;Dom. Rep
+ARTURO FUENTE;Especiales Brevas royale Corona  ;;50;7;350;42 X 139;Dom. Rep
+ARTURO FUENTE;Especiales Cazadores  ;;30;11;330;50 X 152;Dom. Rep
+ARTURO FUENTE;Especiales Emperador Double Corona  ;;30;12;360;52 X 178;Dom. Rep
+ARTURO FUENTE OPUS X;Ffox 20Th Anniv. Believe  ;;20;65;1300;52 X 146;Dom. Rep
+ARTURO FUENTE OPUS X;Ffox 20Th Anniv. Father & Son  ;;20;67;1340;50 X 159;Dom. Rep
+ARTURO FUENTE OPUS X;Ffox 20Th Anniv. God's Whisper  ;;20;74;1480;56 X 165;Dom. Rep
+ARTURO FUENTE OPUS X;Ffox 20Th Anniv. Power Of Dream  ;;20;71;1420;52 X 162;Dom. Rep
+ARTURO FUENTE LTDX;Ffox Angel's Share Fuente Fuente   Ltdx;;32;42;1344;46 X 143;Dom. Rep
+ARTURO FUENTE LTDX;Ffox Angel's Share Perfecxion X   Ltdx;;32;51;1632;48 X 159;Dom. Rep
+ARTURO FUENTE LTDX;Ffox Angel's Share reserve Chateau   Ltdx;;32;55;1760;48 X 178;Dom. Rep
+ARTURO FUENTE LTDX;Ffox Angel's Share robusto   Ltdx;;29;47;1363;50 X 133;Dom. Rep
+ARTURO FUENTE LTDX;Forbidden X El Beso Prohibido   Ltdx;;20;79;1580;50 X 146;Dom. Rep
+ARTURO FUENTE;Gran reserva 8-5-8 Maduro  ;;25;14,5;362,5;47 X 156;Dom. Rep
+ARTURO FUENTE;Gran reserva 8-5-8  ;;25;14,5;362,5;47 X 156;Dom. Rep
+ARTURO FUENTE;Gran reserva 8-5-8 Sun Grown  ;;20;19;380;47 X 156;Dom. Rep
+ARTURO FUENTE;Gran reserva Canones  ;;20;23;460;52 X 216;Dom. Rep
+ARTURO FUENTE;Gran reserva Cuban Corona  ;;25;13,5;337,5;45 X 133;Dom. Rep
+ARTURO FUENTE;Gran reserva Exquisitos Maduro  ;;50;6,5;325;33 X 113;Dom. Rep
+ARTURO FUENTE;Gran reserva Exquisitos Natural  ;;50;6,5;325;33 X 113;Dom. Rep
+ARTURO FUENTE;Gran reserva Petit Corona  ;;25;11,5;287,5;38 X 127;Dom. Rep
+ARTURO FUENTE;Gran reserva rothschild Maduro  ;;25;13,5;337,5;50 X 114;Dom. Rep
+ARTURO FUENTE;Gran reserva rothschild Natural  ;;25;13,5;337,5;50 X 114;Dom. Rep
+ARTURO FUENTE;Hemingway Best Seller Natural ;;25;18;450;55 X 115;Dom. Rep
+ARTURO FUENTE;Hemingway Short Story Natural ;;25;15;375;49 X 100;Dom. Rep
+ARTURO FUENTE;Hemingway Signature  ;;25;23;575;46 X 152;Dom. Rep
+ARTURO FUENTE OPUS X;Opus X Double Corona  ;;32;62;1984;49 X 198;Dom. Rep
+ARTURO FUENTE OPUS X;Opus X Double robusto  ;;42;47;1974;52 X 146;Dom. Rep
+ARTURO FUENTE OPUS X;Opus X Fuente Fuente  ;;32;41;1312;46 X 143;Dom. Rep
+ARTURO FUENTE OPUS X;Opus X Magnum O  ;;36;53;1908;54 X 121;Dom. Rep
+ARTURO FUENTE OPUS X;Opus X Perfecxion 2  ;;29;58;1682;52 X 162;Dom. Rep
+ARTURO FUENTE OPUS X;Opus X Perfecxion X  ;;32;50;1600;48 X 160;Dom. Rep
+ARTURO FUENTE OPUS X;Opus X reserve Chateau;;32;57;1824;48 X 78;Dom. Rep
+ARTURO FUENTE OPUS X;Opus X robusto  ;;29;46;1334;50 X 135;Dom. Rep
+ARTURO FUENTE LTDX;Oxo Oro Oscuro robusto    Ltdx;;29;50;1450;50 X 133;Dom. Rep
+ARTURO FUENTE;Rainforest Delight  ;;50;8;400;32 X 127;Dom. Rep
+ARTURO FUENTE;Rosado Magnum  ;;44;18;792;44 X 127;Dom. Rep
+ARTURO FUENTE;Rosado Magnum  ;;25;18,5;462,5;52 X 127;Dom. Rep
+ARTURO FUENTE;Rosado Magnum  ;;25;21;525;54 X 152;Dom. Rep
+ARTURO FUENTE;Rosado Magnum  ;;25;19,9;497,5;56 X 143;Dom. Rep
+ARTURO FUENTE;Rosado Magnum  ;;25;21;525;58 X 133;Dom. Rep
+ARTURO FUENTE;Rosado Magnum  ;;24;30;720;60 X 152;Dom. Rep
+CASDAGLI;BOS Epicurist Figurado  ;;20;18,5;370;47 X 159;Dom. Rep
+CASDAGLI;Cabinet Selection ristretto  ;;50;10,5;525;50 X 102;Dom. Rep
+CASDAGLI;Cypher 3311 Colossus  ;;8;52;416;60 X 152;Costa Rica
+CASDAGLI;Cypher 3311 Enigma  ;;8;52;416;49 X 191;Costa Rica
+CASDAGLI;Cypher 3311 Lorenz  ;;8;52;416;58 X 224;Costa Rica
+CASDAGLI;Dow Cremello Lancero  ;;12;19;228;39 X 190;Dom. Rep
+CASDAGLI;Dow Dahman Toro  ;;12;22;264;56 X 180;Costa Rica
+CASDAGLI;Dow Pony Express  ;;15;22;330;48 X 152;Costa Rica
+CASDAGLI;Dow Sabino Figurado /60 ;;12;24;288;60 X 157;Costa Rica
+CASDAGLI;Traditional Cotton Tail /52 ;;20;18;360;52 X 127;Dom. Rep
+CASDAGLI;Traditional Grand Cafe Maduro ;;20;16;320;39 X 190;Dom. Rep
+CASDAGLI;Traditional robusto   ;;20;14;280;50 X 125;Dom. Rep
+CASDAGLI;Villa C. Pigasus /58 ;;12;14,5;174;58 X 127;Costa Rica
+CASDAGLI;Villa C. robusto /58 ;;12;12,5;150;58 X 124;Costa Rica
+CEZAR BRONNER;Cabinet Selection Belicoso BP  ;;10;10,5;105;57 X 152;Dom. Rep
+CEZAR BRONNER;Cabinet Selection Coronita Box P  ;;10;9,5;95;46 X 127;Dom. Rep
+CEZAR BRONNER;Cabinet Selection El Primero - ;;20;8,5;170;52 X 102;Dom. Rep
+CEZAR BRONNER;Cabinet Selection Lancero  ;;16;9;144;38 X 178;Dom. Rep
+CEZAR BRONNER;Cacique  ;;5;9,9;49,5;52 X 146;Dom. Rep
+CEZAR BRONNER;Heritage XXL Short robusto rosado  ;;8;9;72;60 X 102;Dom. Rep
+CAVALIER GENÈVE;BII-Viso Jalapa robusto  ;;20;14;280;50 X 127;Nicaragua
+CAVALIER GENÈVE;BII-Viso Jalapa Toro  ;;20;15;300;54 X 152;Nicaragua
+CAVALIER GENÈVE;Black II Lancero  ;;20;15;300;38 X 178;Honduras
+CAVALIER GENÈVE;Black II robusto  ;;20;14;280;50 X 127;Honduras
+CAVALIER GENÈVE;Tres Del Connecticut robusto  ;;24;12;288;50 X 127;Honduras
+CAVALIER GENÈVE;Tres Del Habano robusto  ;;24;12;288;50 X 127;Honduras
+CAVALIER GENÈVE;Tres Del Maduro robusto  ;;24;12;288;50 X 127;Honduras
+CAVALIER GENÈVE;White Series Corona  ;;20;14;280;44 X 146;Honduras
+CAVALIER GENÈVE;White Series Diplomate  ;;20;15,5;310;56 X 140;Honduras
+CAVALIER GENÈVE;White Series Elegantes  ;;20;14;280;52 X 114;Honduras
+CAVALIER GENÈVE;White Series Salomones -58 ;;10;21;210;50 X 178;Honduras
+CIGARKINGS;COY 24 Geniales Colorado;;12;16;192;52 X 127;Nicaragua
+CIGARKINGS;Ft Sun Grown Gigantes  194;;48;19,9;955,2;49 X 194;Nicaragua
+CIGARKINGS;Nicaragua Maduro Corona  ;;12;12,5;150;44 X 136;Nicaragua
+CIGARKINGS;Nicaragua Maduro Elegantes  ;;12;13,5;162;46 X 140;Nicaragua
+CIGARKINGS;Nicaragua Maduro robusto  ;;12;13;156;50 X 127;Nicaragua
+CIGARKINGS;Nicaragua Maduro Toro  ;;12;14;168;52 X 152;Nicaragua
+CIGARKINGS;Nicaragua Sun Grown robusto  ;;12;13;156;50 X 127;Nicaragua
+CIGARKINGS;Nicaragua Sun Grown Toro  ;;12;14;168;52 X 152;Nicaragua
+CIGARKINGS;White Wide Jalapa ;;12;18;216;55 X 127;Nicaragua
+CONDEGA;F Arsenio  ;;10;9;90;52 X 140;Nicaragua
+CONDEGA;F Magnum 52  ;;25;8;200;52 X 165;Nicaragua
+CONDEGA;F Marevas  ;;12;6,5;78;42 X 127;Nicaragua
+CONDEGA;F Mini robusto  ;;25;7;175;50 X 114;Nicaragua
+CONDEGA;F robusto  ;;25;7,5;187,5;50 X 140;Nicaragua
+CONDEGA;F Titan Gran Bundle/15  ;;1;115;115;60 X 158;Nicaragua
+CONDEGA;F Titan Gran  ;;10;9,9;99;60 X 158;Nicaragua
+CONDEGA;F Titan Mini Bundle/15  ;;1;99;99;60 X 114;Nicaragua
+CONDEGA;F Titan Mini  ;;10;9;90;60 X 114;Nicaragua
+FLOR DE SELVA;Ano Del Conejo 2023  ;;10;26;260;48 X 140;Honduras
+FLOR DE SELVA;Clasica Churchill  ;;25;14;350;49 X 178;Honduras
+FLOR DE SELVA;Clasica Corona  ;;25;10,5;262,5;48 X 140;Honduras
+FLOR DE SELVA;Clasica Extremo  ;;10;27;270;46 X 273;Honduras
+FLOR DE SELVA;Clasica Fino  ;;25;11,5;287,5;44 X 152;Honduras
+FLOR DE SELVA;Clasica robusto  ;;25;11,5;287,5;50 X 120;Honduras
+FLOR DE SELVA;Clasica Selvita Tin/10  ;;5;40;200;30 X 102;Honduras
+FLOR DE SELVA;Clasica Tempo  ;;20;16;320;60 X 152;Honduras
+FLOR DE SELVA;Collecion Nr 20 Egoista  ;;20;13;260;60 X 114;Honduras
+FLOR DE SELVA;Collecion Nr 20 Petit Corona  ;;20;13,5;270;42 X 140;Honduras
+FLOR DE SELVA;Collecion Nr 20 robusto  ;;20;14,5;290;50 X 121;Honduras
+FLOR DE SELVA;Collecion Nr 20 Tempo  ;;20;17,5;350;60 X 152;Honduras
+FLOR DE SELVA;Collecion Nr 20 Toro  ;;20;15,5;310;52 X 152;Honduras
+FLOR DE SELVA;Maduro N  ;;20;15,5;310;54 X 140;Honduras
+FLOR DE SELVA;Maduro robusto  ;;20;11,5;230;50 X 120;Honduras
+FLOR DE SELVA;Trio de Toros 3pcs;;1;50;50;;Honduras
+INCA;Premium Secret Cristales  ;;30;7,5;225;40 X 152;Peru
+INCA;Premium Secret Gordo Imperio  ;;20;8,5;170;60 X 152;Peru
+INCA;Premium Secret robusto roca  ;;20;7,5;150;50 X 127;Peru
+INCA;Premium Secret Toro Tambo  ;;20;8;160;50 X 152;Peru
+INCA;rojo Corona  ;;10;4,7;47;44 X 148;Peru
+INCA;rojo Short Corona  ;;10;4;40;43 X 90;Peru
+INCA;Secret Bombaso Maduro  ;;10;9;90;60 X 100;Peru
+MEERÄPFEL SELECTION; La Estancia Edicion Exclusiva  ;;10;29;290;50 X 127;Honduras
+MEERÄPFEL SELECTION; La Estancia Edicion Exclusiva  ;;10;31;310;52 X 149;Honduras
+MEERÄPFEL SELECTION; La Estancia Edicion Exclusiva  ;;10;33;330;56 X 165;Honduras
+MEERÄPFEL SELECTION; La Estancia Edicion Exclusiva  ;;10;35;350;60 X 152;Honduras
+MEERÄPFEL SELECTION; Maestranze Conde robusto  ;;10;12,5;125;52 X 127;Honduras
+MEERÄPFEL SELECTION; Maestranze Marques Toro  ;;10;13;130;50 X 152;Honduras
+MATILDE;Limited Exposure No. 2 robusto;;20;13;260;50 X 133;Dom. Rep
+MATILDE;Oscura robusto  ;;20;11,5;230;50 X 133;Dom. Rep
+MATILDE;Oscura Toro Bravo  ;;20;12;240;54 X 165;Dom. Rep
+MATILDE;Quadrata robusto  ;;20;12;240;50 X 133;Dom. Rep
+MATILDE;renacer robusto  ;;20;11,5;230;54 X 133;Dom. Rep
+MATILDE;robusto Sampler Pack/5;;10;45;450;;Nicaragua
+MATILDE;Serena Grande  ;;20;12,5;250;60 X 152;Dom. Rep
+MATILDE;Serena Maduro Toro Bravo  ;;20;12;240;54 X 165;Dom. Rep
+MATILDE;Serena robusto  ;;20;11;220;50 X 133;Dom. Rep
+MATILDE;Serena Toro Bravo  ;;20;11,5;230;54 X 165;Dom. Rep
+MATILDE;Special Edition  ;;24;17,5;420;50 X 152;Dom. Rep
+MEERÄPFEL SELECTION;Ernest Corona Gorda  ;;25;50;1250;46 X 140;Dom. Rep
+MEERÄPFEL SELECTION;Ernest Double robusto Box/10  ;;1;990;990;52 X 146;Dom. Rep
+MEERÄPFEL SELECTION;Ernest Lonsdale  ;;25;60;1500;43 X 171;Dom. Rep
+MEERÄPFEL SELECTION;Ernest robusto  ;;25;55;1375;50 X 124;Dom. Rep
+MEERÄPFEL SELECTION;Meir Churchill ;;25;60;1500;47 X 178;Dom. Rep
+MEERÄPFEL SELECTION;Meir Corona Gorda  ;;25;50;1250;46 X 140;Dom. Rep
+MEERÄPFEL SELECTION;Meir Double robusto Box/10  ;;1;990;990;52 X 146;Dom. Rep
+MEERÄPFEL SELECTION;Meir Lonsdale  ;;25;60;1500;43 X 171;Dom. Rep
+MEERÄPFEL SELECTION;Meir Pyramid ;;25;65;1625;52 X 154;Dom. Rep
+MEERÄPFEL SELECTION;Meir robusto;;25;50;1250;50 X 24;Dom. Rep
+PADRON;3000 Maduro  ;;26;17;442;52 X 140;Nicaragua
+PADRON;3000 Natural  ;;26;17;442;52 X 140;Nicaragua
+PADRON;Ann. 1964 Exclusivo Natural  ;;25;30;750;50 X 140;Nicaragua
+PADRON;Ann. 1964 Principe Maduro  ;;25;24;600;47 X 113;Nicaragua
+PADRON;Ann. 1964 Principe Natural  ;;25;24;600;47 X 113;Nicaragua
+PADRON;Damaso Nr 12  ;;20;30;600;50 X 127;Nicaragua
+PLASENCIA;Alma Del Campo Guajiro robusto Gordo  ;;10;18,5;185;54 X 140;Nicaragua
+PLASENCIA;Alma Del Campo Sendero Toro Gordo  ;;10;19,9;199;56 X 152;Nicaragua
+PLASENCIA;Alma Del Campo Tribu robusto  ;;10;18;180;52 X 127;Nicaragua
+PLASENCIA;Alma Del Cielo Amanecer Hexagono  ;;10;27;270;60 X 152;Nicaragua
+PLASENCIA;Alma Del Cielo Boreal Toro  ;;10;25;250;54 X 156;Nicaragua
+PLASENCIA;Alma Del Fuego Conception Toro  ;;10;19;190;54 X 152;Nicaragua
+PLASENCIA;Alma Fuerte Col Claro Eduardo I Toro  ;;10;24;240;54 X 159;Nicaragua
+PLASENCIA;Alma Fuerte Col Claro robusto II  ;;10;24;240;55 X 130;Nicaragua
+PLASENCIA;Alma Fuerte Col Claro Sixto I  ;;10;25;250;60 X 152;Nicaragua
+PLASENCIA;Alma Fuerte Generation V  ;;10;25;250;58 X 178;Nicaragua
+PLASENCIA;Alma Fuerte Nestor IV  ;;10;23;230;54 X 159;Nicaragua
+PLASENCIA;Alma Fuerte robusto  ;;10;21;210;52 X 133;Nicaragua
+PLASENCIA;Alma Fuerte Sixto II  ;;10;24;240;60 X 152;Nicaragua
+PLASENCIA;Cosecha 149 Gordo Santa Fe  ;;10;16;160;60 X 124;Honduras
+PLASENCIA;Cosecha 149 robusto La Vega  ;;10;15,5;155;52 X 127;Honduras
+PLASENCIA;Cosecha 149 Toro Azacualpa  ;;10;16,5;165;52 X 152;Honduras
+PLASENCIA;Cosecha 151 La Musica robusto  ;;10;15;150;50 X 127;Honduras
+PLASENCIA;Cosecha 151 La Tradicion Toro  ;;10;18;180;54 X 149;Honduras
+PLASENCIA;Cosecha 151 San Diego Corona Gorda  ;;10;15;150;46 X 146;Honduras
+PLASENCIA;Dominique London Seleccion 2024 Petit Dominique  /25;;25;14;350;52 X 111;Nicaragua
+PLASENCIA;Dominique London Seleccion 2024 Petit Dominique  /50;;50;14;700;52 X 111;Nicaragua
+PLASENCIA;Ehtefal Qatar 2022 Toro  ;;10;65;650;54 X 159;Nicaragua
+PLASENCIA;Orchant Seleccion 2024 Orchante  /25;;25;15;375;55 X 133;Nicaragua
+PLASENCIA;Orchant Seleccion 2024 Orchante  /50;;50;15;750;55 X 133;Nicaragua
+PLASENCIA;Original Corona  ;;20;11,5;230;44 X 159;Nicaragua
+PLASENCIA;Original Nesticos  ;;25;6,5;162,5;36 X 114;Nicaragua
+PLASENCIA;Original Perfectico  ;;10;10,5;105;52 X 98;Nicaragua
+PLASENCIA;Original robusto  ;;20;11,5;230;52 X 120;Nicaragua
+PLASENCIA;Original Toro  ;;20;12,5;250;50 X 152;Nicaragua
+PLASENCIA;robusto Collection Box 6;;1;99;99;;Nicaragua
+PLASENCIA;Year of the Dragon 2024 Torpedo  ;;10;45;450;54 X 165;Nicaragua
+PLASENCIA;Year of the rabit 2023 Toro  ;;10;52;520;54 X 159;Nicaragua
+PLASENCIA;Year of the Snake 2025 Lancero/Culebra  ;;10;49;490;40 X 178;Nicaragua
+REGIUS;Orchant Campana  ;;10;11;110;52 X 140;Nicaragua
+REGIUS;Orchant Hermoso  ;;10;9,9;99;48 X 127;Nicaragua
+REGIUS;Orchant robusto  ;;10;9,9;99;52 X 121;Nicaragua
+ROCKY PATEL;55 Toro  ;;20;14,5;290;55 X 165;Nicaragua
+ROCKY PATEL;Alr Second Edition Toro  ;;20;18,5;370;52 X 152;Nicaragua
+ROCKY PATEL;Cigar Smoking Wc Mareva  ;;10;11;110;42 X 130;Nicaragua
+ROCKY PATEL;Cigar Smoking Wc Toro  ;;20;13;260;52 X 152;Nicaragua
+ROCKY PATEL;Dark Star robusto  ;;20;14;280;50 X 140;Honduras
+ROCKY PATEL;Dark Star Short Star  ;;20;13,5;270;60 X 102;Honduras
+ROCKY PATEL;DBS Toro  ;;20;28;560;52 X 165;Nicaragua
+ROCKY PATEL;Edge 20th Anniversary robusto  ;;20;14;280;50 X 140;Honduras
+ROCKY PATEL;Edge 20th Anniversary Toro  ;;20;15;300;52 X 152;Honduras
+ROCKY PATEL;Edge Candela Toro  ;;20;10,5;210;52 X 152;Honduras
+ROCKY PATEL;Edge Corojo B52 Gordito  ;;30;10,5;315;60 X 114;Honduras
+ROCKY PATEL;Edge Corojo Toro  ;;20;10,5;210;52 X 152;Honduras
+ROCKY PATEL;Edge Lite Short robusto  ;;20;9;180;54 X 114;Honduras
+ROCKY PATEL;Edge Maduro B52 ;;30;10,5;315;60 X 114;Honduras
+ROCKY PATEL;Edge Nicaragua Toro  ;;20;10,5;210;52 X 152;Nicaragua
+ROCKY PATEL;Grand reserve red Label Toro  ;;10;14,5;145;52 X 152;Nicaragua
+ROCKY PATEL;Quarter Century robusto  ;;20;12,5;250;50 X 140;Nicaragua
+ROCKY PATEL;Quarter Century Toro  ;;20;13;260;52 X 165;Nicaragua
+ROCKY PATEL;Seed to Smoke Shade Toro Bundle/10  ;;1;40;40;52 X 152;Honduras
+ROCKY PATEL;Sixty Toro  ;;20;26;520;52 X 165;Nicaragua
+ROCKY PATEL;Super Ligero robusto  ;;20;9,5;190;50 X 127;Honduras
+ROCKY PATEL;Vintage 1990 Toro  ;;20;10,5;210;52 X 165;Honduras
+ROCKY PATEL;Vintage 1999 Connecticut Corona  ;;20;9,9;198;42 X 140;Honduras
+ROCKY PATEL;Vintage 1999 Connecticut Toro  ;;20;10,5;210;52 X 165;Honduras
+ROCKY PATEL;Vintage 2003 Juniors Tin/5  ;;10;25;250;38 X 102;Honduras
+ROCKY PATEL;Vintage 2003 Sixty  ;;20;15;300;60 X 152;Honduras
+ROCKY PATEL;White Label Toro  ;;20;29;580;52 X 165;Nicaragua
+UMNUM;Nica Bond Bundle/5  ;;1;20;20;44 X 114;Nicaragua
+UMNUM;Nica Canonazo Bundle/25  ;;1;85;85;52 X 133;Nicaragua
+UMNUM;Nica Canonazo Bundle/5  ;;1;24;24;52 X 133;Nicaragua
+UMNUM;Nica Jumbo Bundle/16  ;;1;82;82;60 X 121;Nicaragua
+UMNUM;Nica Jumbo Bundle/5  ;;1;27,5;27,5;60 X 121;Nicaragua
+VILLA ZAMORANO;Clasico Corona Bundle/15  ;;1;75;75;42 X 127;Honduras
+VILLA ZAMORANO;Clasico El Gordo Bundle/15  ;;1;99;99;56 X 127;Honduras
+VILLA ZAMORANO;Clasico Expreso Bundle/15  ;;1;75;75;52 X 89;Honduras
+VILLA ZAMORANO;Clasico N Bundle/15  ;;1;95;95;54 X 140;Honduras
+VILLA ZAMORANO;Clasico robusto Bundle/15  ;;1;90;90;50 X 127;Honduras
+VILLA ZAMORANO;Clasico Soberano Bundle/15  ;;1;115;115;60 X 152;Honduras
+VILLA ZAMORANO;Danli robusto  ;;25;8,5;212,5;50 X 127;Honduras
+VILLA ZAMORANO;Danli Toro  ;;25;9,5;237,5;56 X 152;Honduras
+VILLA ZAMORANO;reserva Churchill  ;;25;8;200;48 X 178;Honduras
+VILLA ZAMORANO;reserva Cigar Can;;6;39;234;;Honduras
+VILLA ZAMORANO;reserva El Gordo  ;;25;7,5;187,5;56 X 127;Honduras
+VILLA ZAMORANO;reserva Expreso  ;;25;6,5;162,5;52 X 89;Honduras
+VILLA ZAMORANO;reserva robusto  ;;25;7;175;50 X 127;Honduras
+VILLA ZAMORANO;reserva Soberano  ;;25;9;225;60 X 152;Honduras
+COHIBA LÍNEA CLÁSICA;PANETELAS;LAGUITO No.3;25;31;775;26 X 115;Cuba
+COHIBA LÍNEA CLÁSICA;EXQUISITOS;SEOANE;25;39;975;33 X 126;Cuba
+COHIBA LÍNEA CLÁSICA;ROBUSTOS;ROBUSTOS;25;78;1950;50 X 124;Cuba
+COHIBA LÍNEA CLÁSICA;CORONAS ESPECIALES;LAGUITO No.2;25;57,2;1430;38 X 152;Cuba
+COHIBA LÍNEA CLÁSICA;AMBAR;PLACERES;10;86;860;53 X 132;Cuba
+COHIBA LÍNEA CLÁSICA;PIRAMIDES EXTRA;PIRAMIDES EXTRA;10;120;1200;54 X 160;Cuba
+COHIBA LÍNEA CLÁSICA;ESPLENDIDOS;JULIETA No.2;25;123;3075;47 X 178;Cuba
+COHIBA LÍNEA 1492;SIGLO I;PERLAS;25;34;850;40 X 102;Cuba
+COHIBA LÍNEA 1492;SIGLO II;MAREVAS;25;39;975;42 X 129;Cuba
+COHIBA LÍNEA 1492;SIGLO III;CORONAS GRANDES;25;54;1350;42 X 155;Cuba
+COHIBA LÍNEA 1492;SIGLO IV;CORONAS GORDAS;25;62;1550;46 X 143;Cuba
+COHIBA LÍNEA 1492;SIGLO V;DALIAS;25;68;1700;43 X 170;Cuba
+COHIBA LÍNEA 1492;SIGLO VI;CAÑONAZO;25;105;2625;52 X 150;Cuba
+COHIBA LÍNEA 1492;MEDIO SIGLO;MEDIO SIGLO;25;66;1650;52 X 102;Cuba
+COHIBA LÍNEA MADURO;SECRETOS;SECRETOS 5;25;39;975;40 X 110;Cuba
+COHIBA LÍNEA MADURO;MÁGICOS;MÁGICOS 5;25;82;2050;52 X 115;Cuba
+COHIBA LÍNEA MADURO;GENIOS;GENIOS 5;25;99;2475;52 X 140;Cuba
+COHIBA LÍNEA BHK;BHK 52;LAGUITO No.4;10;205;2050;52 X 119;Cuba
+COHIBA LÍNEA BHK;BHK 54;LAGUITO No.5;10;260;2600;54 X 144;Cuba
+COHIBA LÍNEA BHK;BHK 56;LAGUITO No.6;10;290;2900;56 X 166;Cuba
+TRINIDAD;REYES;REYES;24;33,5;804;40 X 110;Cuba
+TRINIDAD;COLONIALES;COLONIALES;24;48,2;1156,8;44 X 132;Cuba
+TRINIDAD;MEDIA LUNA;MARINAS;12;44,5;534;50 X 115;Cuba
+TRINIDAD;ESMERALDA;DINORAS;12;66;792;53 X 145;Cuba
+TRINIDAD;TOPES;TOPES;12;64;768;56 X 125;Cuba
+TRINIDAD;FUNDADORES;LAGUITO ESPECIAL;24;64;1536;40 X 192;Cuba
+TRINIDAD;VIGIA;TORRES;12;53;636;54 X 110;Cuba
+MONTECRISTO LÍNEA CLÁSICA;MONTECRISTO No.1;CERVANTES;25;21,5;537,5;42 X 165;Cuba
+MONTECRISTO LÍNEA CLÁSICA;MONTECRISTO No.2;PIRAMIDES;25;25;625;52 X 156;Cuba
+MONTECRISTO LÍNEA CLÁSICA;MONTECRISTO No.3;CORONAS;25;19,6;490;42 X 142;Cuba
+MONTECRISTO LÍNEA CLÁSICA;MONTECRISTO No.4;MAREVAS;25;14,5;362,5;42 X 129;Cuba
+MONTECRISTO LÍNEA CLÁSICA;MONTECRISTO No.5;PERLAS;25;12;300;40 X 102;Cuba
+MONTECRISTO LÍNEA CLÁSICA;MEDIA CORONA;HALF CORONA;25;10,2;255;44 X 90;Cuba
+MONTECRISTO LÍNEA CLÁSICA;MONTECRISTO ESPECIAL No.2;LAGUITO No.2;25;21,4;535;38 X 152;Cuba
+MONTECRISTO LÍNEA CLÁSICA;JOYITAS;LAGUITO No.3;25;10,8;270;26 X 115;Cuba
+MONTECRISTO LÍNEA CLÁSICA;MONTECRISTO PETIT No.2;PETIT No.2;10;18;180;52 X 120;Cuba
+MONTECRISTO LÍNEA EDMUNDO;PETIT EDMUNDO;PETIT EDMUNDO;25;19,8;495;52 X 110;Cuba
+MONTECRISTO LÍNEA EDMUNDO;EDMUNDO;EDMUNDO;25;23,8;595;52 X 135;Cuba
+MONTECRISTO LÍNEA EDMUNDO;WIDE EDMUNDO;DUKE No.3;25;25;625;54 X 125;Cuba
+MONTECRISTO LÍNEA EDMUNDO;DOUBLE EDMUNDO;DOBLES;25;26;650;50 X 155;Cuba
+MONTECRISTO LÍNEA OPEN;JUNIOR;TRABUCOS;20;11,5;230;38 X 110;Cuba
+MONTECRISTO LÍNEA OPEN;MASTER;ROBUSTOS;20;20,4;408;50 X 124;Cuba
+MONTECRISTO LÍNEA OPEN;REGATA;FORUM;20;16,5;330;46 X 135;Cuba
+MONTECRISTO LÍNEA OPEN;EAGLE;GENIALES;20;26;520;54 X 150;Cuba
+MONTECRISTO LÍNEA 1935;DUMAS;PROMINENTE CORTO;20;51;1020;49 X 130;Cuba
+MONTECRISTO LÍNEA 1935;MALTES;SOBRESALIENTES;20;65;1300;53 X 153;Cuba
+MONTECRISTO LÍNEA 1935;LEYENDA;MARAVILLAS No.2;20;74;1480;55 X 165;Cuba
+PARTAGAS LÍNEA CLÁSICA;ARISTOCRATS;PETIT CETROS;25;7,6;190;40 X 129;Cuba
+PARTAGAS LÍNEA CLÁSICA;PETIT CORONAS ESPECIALES;EMINENTES;25;7,5;187,5;42 X 132;Cuba
+PARTAGAS LÍNEA CLÁSICA;MILLE FLEURS;PETIT CORONAS;5;7,8;39;42 X 129;Cuba
+PARTAGAS LÍNEA CLÁSICA;MILLE FLEURS;PETIT CORONAS;10;7,8;78;42 X 129;Cuba
+PARTAGAS LÍNEA CLÁSICA;MILLE FLEURS;PETIT CORONAS;25;7,8;195;42 X 129;Cuba
+PARTAGAS LÍNEA CLÁSICA;SHORTS;MINUTOS;50;11;550;42 X 110;Cuba
+PARTAGAS LÍNEA CLÁSICA;ALIADOS (LCDH+HS);DELIRIOS;20;49;980;45 X 167;Cuba
+PARTAGAS LÍNEA CLÁSICA;LUSITANIAS;PROMINENTES;25;29,6;740;49 X 194;Cuba
+PARTAGAS LÍNEA SERIES;SERIE D No.6;D No.6;20;14,2;284;50 X 90;Cuba
+PARTAGAS LÍNEA SERIES;SERIE D No.4;ROBUSTOS;25;20;500;50 X 124;Cuba
+PARTAGAS LÍNEA SERIES;SERIE D No.4;ROBUSTOS;10;20;200;50 X 124;Cuba
+PARTAGAS LÍNEA SERIES;SERIE P No.2;PIRAMIDES;25;23,5;587,5;52 X 156;Cuba
+PARTAGAS LÍNEA SERIES;SERIE D No.5;D No.5;25;17,8;445;50 X 110;Cuba
+PARTAGAS LÍNEA SERIES;SERIE E No.2;DUKE;5;24;120;54 X 140;Cuba
+PARTAGAS LÍNEA SERIES;SERIE E No.2;DUKE;25;24;600;54 X 140;Cuba
+PARTAGAS LÍNEA MADURO;MADURO No.1;DISCRETOS;25;21;525;52 X 130;Cuba
+PARTAGAS LÍNEA MADURO;MADURO No.2;SHORT PIRAMIDES;25;21,4;535;55 X 120;Cuba
+PARTAGAS LÍNEA MADURO;MADURO No.3;MADURO No.3;25;22,6;565;50 X 145;Cuba
+PARTAGAS LÍNEA MAESTRA;ORIGEN;BONDADOSOS;20;58;1160;46 X 154;Cuba
+PARTAGAS LÍNEA MAESTRA;MAESTRO;DELEITES;20;66;1320;56 X 132;Cuba
+PARTAGAS LÍNEA MAESTRA;RITO;GUSTOSOS;20;73;1460;52 X 168;Cuba
+ROMEO Y JULIETA LÍNEA CLÁSICA;SPORTS LARGOS;SPORTS;25;6,6;165;35 X 117;Cuba
+ROMEO Y JULIETA LÍNEA CLÁSICA;BELVEDERES;BELVEDERES;25;6,6;165;39 X 125;Cuba
+ROMEO Y JULIETA LÍNEA CLÁSICA;PETIT JULIETAS;ENTREACTOS;25;7,5;187,5;30 X 100;Cuba
+ROMEO Y JULIETA LÍNEA CLÁSICA;CORONITAS EN CEDRO;PETIT CETROS;25;7,4;185;40 X 129;Cuba
+ROMEO Y JULIETA LÍNEA CLÁSICA;REGALIAS DE LONDRES;CORONITAS;25;7,4;185;40 X 117;Cuba
+ROMEO Y JULIETA LÍNEA CLÁSICA;MILLE FLEURS;PETIT CORONAS;25;7,8;195;42 X 129;Cuba
+ROMEO Y JULIETA LÍNEA CLÁSICA;PETIT CORONAS;MAREVAS;25;13;325;42 X 129;Cuba
+ROMEO Y JULIETA LÍNEA CLÁSICA;ROMEO No.3 A.T.;CORONITAS;25;9,8;245;40 X 117;Cuba
+ROMEO Y JULIETA LÍNEA CLÁSICA;ROMEO No.2 A.T.;PETIT CORONAS;25;10,4;260;42 X 129;Cuba
+ROMEO Y JULIETA LÍNEA CLÁSICA;ROMEO No.1 A.T.;CREMAS;25;11,2;280;40 X 140;Cuba
+ROMEO Y JULIETA LÍNEA CLÁSICA;PETIT ROYALES;CAPRICHOS;25;12;300;47 X 95;Cuba
+ROMEO Y JULIETA LÍNEA CLÁSICA;BELICOSOS;CAMPANAS;25;20,8;520;52 X 140;Cuba
+ROMEO Y JULIETA LÍNEA CLÁSICA;CUPIDOS (LCDH + HS);VERONAS;20;71,5;1430;55 X 148;Cuba
+ROMEO Y JULIETA LÍNEA CHURCHILLS;SHORT CHURCHILLS;ROBUSTOS;25;20,2;505;50 X 124;Cuba
+ROMEO Y JULIETA LÍNEA CHURCHILLS;CHURCHILLS;JULIETA No.2;25;29;725;47 X 178;Cuba
+ROMEO Y JULIETA LÍNEA CHURCHILLS;WIDE CHURCHILLS;MONTESCO;25;22,2;555;55 X 130;Cuba
+ROMEO Y JULIETA LÍNEA CHURCHILLS;PETIT CHURCHILLS;PETIT ROBUSTOS;25;16,5;412,5;50 X 102;Cuba
+ROMEO Y JULIETA LÍNEA DE ORO;NOBLES;TRIANGULARES;20;56;1120;56 X 135;Cuba
+ROMEO Y JULIETA LÍNEA DE ORO;HIDALGOS;HIDALGOS;20;63;1260;57 X 125;Cuba
+ROMEO Y JULIETA LÍNEA DE ORO;DIANAS;DAMAS;20;61;1220;52 X 145;Cuba
+HOYO DE MONTERREY;PETIT ROBUSTOS;PETIT ROBUSTOS;25;15,6;390;50 X 102;Cuba
+HOYO DE MONTERREY LÍNEA EPICURE;EPICURE No.2;ROBUSTOS;25;19;475;50 X 124;Cuba
+HOYO DE MONTERREY LÍNEA EPICURE;EPICURE No.1;CORONAS GORDAS;25;20;500;46 X 143;Cuba
+HOYO DE MONTERREY LÍNEA EPICURE;EPICURE No.3;ORIGINALES;25;21;525;54 X 125;Cuba
+HOYO DE MONTERREY LÍNEA EPICURE;EPICURE ESPECIAL;GORDITO;25;21,7;542,5;50 X 141;Cuba
+HOYO DE MONTERREY SERIE LE HOYO;LE HOYO DU MAIRE;ENTREACTOS;25;8,9;222,5;30 X 100;Cuba
+HOYO DE MONTERREY SERIE LE HOYO;LE HOYO DU DEPUTE;TRABUCOS;25;11,2;280;38 X 110;Cuba
+HOYO DE MONTERREY SERIE LE HOYO;LE HOYO DE SAN JUAN;GENIALES;25;24,7;617,5;54 X 150;Cuba
+HOYO DE MONTERREY SERIE LE HOYO;LE HOYO DE RIO SECO;AROMOSOS;25;24,7;617,5;56 X 140;Cuba
+H.UPMANN;HALF CORONA;HALF CORONA;25;7,6;190;44 X 90;Cuba
+H.UPMANN;MAJESTIC;CREMAS;25;7,6;190;40 X 140;Cuba
+H.UPMANN;CORONAS MAJOR A.T.;EMINENTES;25;11;275;42 X 132;Cuba
+H.UPMANN;UPMANN No.2;PIRAMIDES;25;22;550;52 X 156;Cuba
+H.UPMANN LÍNEA MAGNUM;MAGNUM 46;CORONAS GORDAS;25;19,8;495;46 X 143;Cuba
+H.UPMANN LÍNEA MAGNUM;MAGNUM 50;MAGNUM 50;25;23,5;587,5;50 X 160;Cuba
+H.UPMANN LÍNEA MAGNUM;MAGNUM 54;MAGNUM 54;25;20;500;54 X 120;Cuba
+H.UPMANN LÍNEA CONNOSSIEUR;CONNOISSEUR No.1;HERMOSOS No.4;25;17;425;48 X 127;Cuba
+H.UPMANN LÍNEA CONNOSSIEUR;CONNOSSIEUR No.2;BOHEMIOS;25;20,2;505;51 X 134;Cuba
+H.UPMANN LÍNEA CONNOSSIEUR;CONNOSSIEUR B (LCDH + HS);GENIALES;25;24,7;617,5;54 X 150;Cuba
+H.UPMANN LÍNEA CONNOSSIEUR;CONNOSSIEUR A (LCDH + HS);GENIOS;25;22;550;52 X 140;Cuba
+JOSE L. PIEDRA;PETIT CAZADORES;PETIT CAZADORES;12;2,3;27,6;43 X 105;Cuba
+JOSE L. PIEDRA;BREVAS;BREVAS JLP;12;2,7;32,4;42 X 133;Cuba
+JOSE L. PIEDRA;CONSERVAS;CONSERVAS JLP;12;2,9;34,8;44 X 140;Cuba
+JOSE L. PIEDRA;CAZADORES;CAZADORES JLP;12;3,1;37,2;43 X 152;Cuba
+JOSE L. PIEDRA;PETIT CABALLEROS;HERMOSO CORTO;12;3,2;38,4;48 X 120;Cuba
+BOLIVAR;CORONAS JUNIOR;MINUTOS;25;10,4;260;42 X 110;Cuba
+BOLIVAR;ROYAL CORONAS;ROBUSTOS;25;17,2;430;50 X 124;Cuba
+BOLIVAR;BELICOSOS FINOS;CAMPANAS;25;20,6;515;52 X 140;Cuba
+PUNCH;TRIUNFOS;PETIT CORONAS;5;15;75;42 X 129;Cuba
+PUNCH;PUNCH PUNCH;CORONAS GORDAS;25;18,4;460;46 X 143;Cuba
+PUNCH;PUNCH 48 (LCDH + HS);HERMOSOS No.3;10;20,2;202;48 X 140;Cuba
+PUNCH;SHORT  DE PUNCH;PARAÍSOS;10;16,2;162;50 X 120;Cuba
+PUNCH;DOUBLE CORONAS;PROMINENTES;25;28;700;49 X 194;Cuba
+QUINTERO;PETIT QUINTERO;PETIT CAZADORES;25;2,8;70;43 X 105;Cuba
+QUINTERO;PANETELAS;VEGUERITOS;25;3,5;87,5;37 X 127;Cuba
+QUINTERO;BREVAS;NACIONALES;25;3,7;92,5;40 X 140;Cuba
+QUINTERO;LONDRES EXTRA;STANDARD;25;3,8;95;40 X 123;Cuba
+QUINTERO;FAVORITOS;CONCHAS No.2;25;4,4;110;50 X 115;Cuba
+QUAI D'ORSAY;No.50;D No.5;25;13;325;50 X 110;Cuba
+QUAI D'ORSAY;No.54;EDMUNDO GRUESO;25;17,4;435;54 X 135;Cuba
+QUAI D'ORSAY;No.52;LANZAS;25;20;500;52 X 156;Cuba
+CUABA;DIVINOS;PETIT BOUQUET;25;9,4;235;43 X 101;Cuba
+CUABA;TRADICIONALES;FAVORITOS;25;10,8;270;42 X 120;Cuba
+RAFAEL GONZALEZ;PANETELAS EXTRA;VEGUERITOS;25;4,2;105;37 X 127;Cuba
+RAFAEL GONZALEZ;PERLAS;PERLAS;25;6,4;160;40 X 102;Cuba
+EL REY DEL MUNDO;DEMI TASSE;ENTREACTOS;25;6;150;30 X 100;Cuba
+EL REY DEL MUNDO;CHOIX SUPREME;HERMOSOS No.4;25;13,8;345;48 X 127;Cuba
+POR LARRAÑAGA;MONTECARLOS;DELICIOSOS;25;6,7;167,5;33 X 159;Cuba
+POR LARRAÑAGA;PETIT CORONAS;MAREVAS;50;9,4;470;42 X 129;Cuba
+POR LARRAÑAGA;GALANES;GALANES;10;11,7;117;52 X 120;Cuba
+POR LARRAÑAGA;PICADORES No.1 (LCDH + HS);HERMOSOS No.4;25;12,3;307,5;48 X 127;Cuba
+JUAN LOPEZ;DRAGONES EdReg Belux;MAGICOS;10;19;190;52 X 115;Cuba
+JUAN LOPEZ;SELECCION No.2;ROBUSTOS;25;14,5;362,5;50 X 124;Cuba
+VEGUEROS;MAÑANITAS A.P.;MAÑANITAS;16;6,7;107,2;46 X 100;Cuba
+VEGUEROS;CENTROGORDOS A.P.;CENTRO GORDO;16;10,2;163,2;54 X 100;Cuba
+VEGUEROS;TAPADOS A.P.;MAREVA GRUESA;16;9;144;46 X 120;Cuba
+VEGUEROS;ENTRETIEMPOS A.P.;PETIT EDMUNDO;16;9,7;155,2;52 X 110;Cuba
+VEGUEROS;CENTROFINOS A.P.;CENTRO FINO;16;11;176;50 X 130;Cuba
+RAMON ALLONES;SMALL CLUB CORONAS;MINUTOS;25;9,6;240;42 X 110;Cuba
+RAMON ALLONES;ALLONES SPECIALLY SELECTED;ROBUSTOS;25;16,2;405;50 X 124;Cuba
+RAMON ALLONES;ALLONES No.3;NOBLEZAS;10;18,7;187;52 X 138;Cuba
+LA GLORIA CUBANA;TURQUINOS;GORDITO;10;17,4;174;50 X 141;Cuba
+VEGAS ROBAINA;FAMOSOS;HERMOSOS No.4;25;15,8;395;48 X 127;Cuba
+SAINT LUIS REY;REGIOS;HERMOSOS No.4;25;13,6;340;48 X 127;Cuba
+LA FLOR DE CANO;ELEGIDOS;LIRIOS;10;6,4;64;50 X 127;Cuba
+SAN CRISTOBAL DE LA HABANA;EL PRINCIPE;MINUTOS;25;9,4;235;42 X 110;Cuba
+SAN CRISTOBAL DE LA HABANA;PRADO (LCDH + HS);PETIT PIRAMIDES;10;16,7;167;50 X 127;Cuba
+COMBINACIONES;SELECCIÓN ROBUSTOS;ROBUSTOS;6;36;216;50 X 124;Cuba
+COMBINACIONES;SELECCIÓN PIRAMIDES;PIRAMIDES;6;41;246;52 X 156;Cuba
+COMBINACIONES;SELECCIÓN PETIT ROBUSTOS;PETIT ROBUSTOS;10;26;260;50 X 102;Cuba
+VEGAFINA LÍNEA CLÁSICA;MINUTOS;MINUTOS;25;3,2;80;30 X 100;Dom. Rep
+VEGAFINA LÍNEA CLÁSICA;PERLA;PERLAS;25;4,7;117,5;40 X 102;Dom. Rep
+VEGAFINA LÍNEA CLÁSICA;CORONA;CORONA;25;6,8;170;43 X 146;Dom. Rep
+VEGAFINA LÍNEA CLÁSICA;SHORT ROBUSTO;SHORT ROBUSTO;25;7,4;185;50 X 105;Dom. Rep
+VEGAFINA LÍNEA CLÁSICA;ROBUSTO;ROBUSTO;25;8,8;220;50 X 127;Dom. Rep
+VEGAFINA SERIE 2;SHORT MAGNUM;SHORT MAGNUM;10;8,6;86;54 X 110;Dom. Rep
+VEGAFINA SERIE 2;ROBUSTO;ROBUSTO;10;9,2;92;50 X 127;Dom. Rep
+VEGAFINA SERIE 2;TORO;TORO;20;11;220;54 X 152;Dom. Rep
+VEGAFINA LINEA 1998;1998 42 L;NO. 42;25;9,9;247,5;42 X 187;Dom. Rep
+VEGAFINA LINEA 1998;1998 44 S;NO. 44;25;7,5;187,5;44 X 100;Dom. Rep
+VEGAFINA LINEA 1998;199.846;NO. 46;25;8,3;207,5;46 X 143;Dom. Rep
+VEGAFINA LINEA 1998;199.850;NO. 50;25;9;225;50 X 115;Dom. Rep
+VEGAFINA LINEA 1998;199.852;NO. 52;25;9,9;247,5;52 X 135;Dom. Rep
+VEGAFINA LINEA 1998;199.854;NO. 54;25;11,2;280;54 X 155;Dom. Rep
+VEGAFINA LINEA 1998;199.856;NO. 56;25;10,7;267,5;56 X 127;Dom. Rep
+FLOR DE COPAN LÍNEA CLÁSICA;PERLA;PERLAS;25;5,5;137,5;40 X 102;Honduras
+FLOR DE COPAN LÍNEA CLÁSICA;SHORT ROBUSTO;SHORT ROBUSTO;20;6;120;50 X 102;Honduras
+FLOR DE COPAN LÍNEA CLÁSICA;ROTSCHILD;ROTSCHILD;20;8,3;166;50 X 127;Honduras
+FLOR DE COPAN LÍNEA CLÁSICA;MADURO ROTSCHILD;MADURO ROTSCHILD;20;8,4;168;50 X 127;Honduras
+FLOR DE COPAN LÍNEA CLÁSICA;GORDITO;GORDITO;20;9;180;55 X 120;Honduras
+FLOR DE COPAN LÍNEA CLÁSICA;CHURCHILL;CHURCHILL;20;9,8;196;50 X 178;Honduras
+FLOR DE COPAN LÍNEA CLÁSICA;TITAN;TITAN;20;10,4;208;60 X 152;Honduras
+FLOR DE COPAN LÍNEA CLÁSICA;SHORT MAGNUM;SHORT MAGNUM;20;7,7;154;60 X 102;Honduras
+FLOR DE COPAN LINEA PURO;CORONA;CORONA;20;9,9;198;40 X 152;Honduras
+FLOR DE COPAN LINEA PURO;ROBUSTO;ROBUSTO;20;11,1;222;50 X 127;Honduras
+FLOR DE COPAN LINEA PURO;CHURCHILL;CHURCHILL;20;12,2;244;48 X 178;Honduras
+VEGAFINA NICARAGUA;MINUTOS A.P.;MINUTOS;8;3,3;26,4;30 X 100;Nicaragua
+VEGAFINA NICARAGUA;SHORT;SHORT;25;5,5;137,5;42 X 110;Nicaragua
+VEGAFINA NICARAGUA;VULCANO;VULCANO;25;9,2;230;56 X 110;Nicaragua
+VEGAFINA NICARAGUA;ROBUSTO;ROBUSTO;25;9,1;227,5;50 X 127;Nicaragua
+VEGAFINA NICARAGUA;GRAN TORO;GRAN TORO;25;10,8;270;52 X 152;Nicaragua
+VEGAFINA NICARAGUA;GRAN VULCANO;GRAN VULCANO;25;9,9;247,5;56 X 137;Nicaragua
+CAPITOL;SWING 44;SWING;10;9;90;44 X 129;Nicaragua
+CAPITOL;JACK 52;JACK;10;10;100;52 X 120;Nicaragua
+CAPITOL;CASINO 54;CASINO;10;12;120;54 X 135;Nicaragua
+CAPITOL;GALA 56;GALA;10;14;140;56 X 155;Nicaragua
+`;
+
+        let allCigars = [];
+        let headers = []; // Globale variabele om headers op te slaan
+
+        // Functie om CSV-gegevens te parsen
+        function parseCSV(csv) {
+            const lines = csv.split('\n');
+            // Filter lege regels uit voordat ze worden verwerkt
+            const nonEmptyLines = lines.filter(line => line.trim() !== '');
+
+            if (nonEmptyLines.length === 0) {
+                return { headers: [], cigars: [] };
+            }
+
+            // Headers extraheren uit de eerste niet-lege regel
+            const parsedHeaders = nonEmptyLines[0].split(';').map(h => h.trim());
+            const cigars = [];
+
+            // Gegevensregels verwerken
+            for (let i = 1; i < nonEmptyLines.length; i++) {
+                const currentLine = nonEmptyLines[i];
+                // Splitst op puntkomma, maar niet als deze binnen dubbele aanhalingstekens staat
+                const values = currentLine.split(/;(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => {
+                    // Verwijder aanhalingstekens en trim witruimte
+                    val = val.trim();
+                    if (val.startsWith('"') && val.endsWith('"')) {
+                        return val.slice(1, -1).replace(/""/g, '"'); // Behandel geëscapete aanhalingstekens
+                    }
+                    return val;
+                });
+
+                if (values.length === parsedHeaders.length) {
+                    let cigar = {};
+                    parsedHeaders.forEach((header, index) => {
+                        cigar[header] = values[index];
+                    });
+                    cigars.push(cigar);
+                } else {
+                    console.warn('Skipping malformed row (value count mismatch):', currentLine, 'Expected', parsedHeaders.length, 'Got', values.length);
+                }
+            }
+            return { headers: parsedHeaders, cigars: cigars };
+        }
+
+        // Functie om de catalogus als tabel weer te geven
+        function displayCatalog(cigarsToDisplay) {
+            const catalogContainer = document.getElementById('catalog-container');
+            catalogContainer.innerHTML = ''; // Maak de container leeg
+
+            if (cigarsToDisplay.length === 0) {
+                catalogContainer.innerHTML = '<div class="no-results">Geen sigaren gevonden die overeenkomen met uw zoekopdracht.</div>';
+                return;
+            }
+
+            // Sorteer de sigaren alfabetisch op 'Brand'
+            cigarsToDisplay.sort((a, b) => {
+                const brandA = a['Brand'] ? a['Brand'].toUpperCase() : '';
+                const brandB = b['Brand'] ? b['Brand'].toUpperCase() : '';
+                if (brandA < brandB) {
+                    return -1;
+                }
+                if (brandA > brandB) {
+                    return 1;
+                }
+                return 0;
+            });
+
+            const table = document.createElement('table');
+            table.classList.add('catalog-table');
+
+            // Maak de tabelkop (headers)
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            headers.forEach(headerText => {
+                const th = document.createElement('th');
+                th.textContent = headerText;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Maak de tabelrijen (data)
+            const tbody = document.createElement('tbody');
+            cigarsToDisplay.forEach(cigar => {
+                const tr = document.createElement('tr');
+                headers.forEach(header => {
+                    const td = document.createElement('td');
+                    let cellContent = cigar[header] || ''; // Gebruik een lege string voor 'N/A' voor een schonere tabel
+
+                    // Specifieke opmaak voor prijsvelden
+                    if (header === '€ Unit' || header === '€ Box') {
+                        const priceValue = parseFloat(cellContent.replace(',', '.')) || 0;
+                        td.classList.add('price-cell');
+                        td.innerHTML = `&euro;<span>${priceValue.toFixed(2).replace('.', ',')}</span>`;
+                    } else {
+                        td.textContent = cellContent;
+                    }
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+
+            catalogContainer.appendChild(table);
+        }
+
+        // Filterfunctie
+        function filterCatalog() {
+            const searchInput = document.getElementById('searchInput');
+            const searchTerm = searchInput.value.toLowerCase();
+
+            const filteredCigars = allCigars.filter(cigar => {
+                // Combineer alle relevante velden tot één doorzoekbare string
+                const searchableText = `${cigar['Brand']} ${cigar['Brand 2']} ${cigar['Brand 3']} ${cigar['Country']} ${cigar['Size']}`.toLowerCase();
+                return searchableText.includes(searchTerm);
+            });
+
+            displayCatalog(filteredCigars);
+        }
+
+        // Functie voor login
+        function handleLogin() {
+            const usernameInput = document.getElementById('usernameInput');
+            const passwordInput = document.getElementById('passwordInput');
+            const errorMessage = document.getElementById('errorMessage');
+            const loginContainer = document.getElementById('loginContainer');
+            const mainCatalogContainer = document.getElementById('mainCatalogContainer');
+
+            const username = usernameInput.value;
+            const password = passwordInput.value;
+
+            // Hardcoded inloggegevens voor dit voorbeeld
+            const correctUsername = 'Philbo';
+            const correctPassword = 'sigaren2025';
+
+            if (username === correctUsername && password === correctPassword) {
+                loginContainer.style.display = 'none'; // Verberg login formulier
+                mainCatalogContainer.style.display = 'block'; // Toon de catalogus
+                errorMessage.textContent = ''; // Wis eventuele foutmeldingen
+                // Initialiseer de catalogus na succesvolle login
+                const parsedData = parseCSV(csvData);
+                headers = parsedData.headers;
+                allCigars = parsedData.cigars;
+                displayCatalog(allCigars);
+            } else {
+                errorMessage.textContent = 'Onjuiste gebruikersnaam of wachtwoord.';
+            }
+        }
+
+        // Initialisatie bij het laden van de pagina: toon eerst het login formulier
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('mainCatalogContainer').style.display = 'none'; // Zorg ervoor dat de catalogus verborgen is bij het laden
+        });
+    </script>
+</body>
+</html>
