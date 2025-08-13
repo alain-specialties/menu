@@ -41,22 +41,54 @@
             // Functie om de CSV-tekst te parsen en de data te formatteren
             const parseCsv = (csvText) => {
                 const lines = csvText.trim().split('\n');
-                const parsedData = lines.slice(1).map(line => {
-                    const values = line.split(';');
-                    // Mapping van de CSV-waarden naar de nieuwe headerstructuur
-                    return {
-                        'Brand': values[0]?.trim(),
-                        'Brand2': values[1]?.trim(),
-                        'Brand3': values[2]?.trim(),
-                        '€ Unit': values[4]?.trim(),
-                        '# Box': values[3]?.trim(),
-                        '€ Box': values[5]?.trim(),
-                        'Size': values[6]?.trim(),
-                        'Country': values[7]?.trim(),
-                        // 'Stock' is een nieuwe kolom, met een placeholder-waarde
-                        'Stock': 'In Stock'
-                    };
+                if (lines.length <= 1) return [];
+
+                // Eerste regel zijn de headers
+                const rawHeaders = lines[0].split(';').map(h => h.trim());
+                const dataRows = lines.slice(1);
+
+                // Definieer een mapping van de ruwe headers naar de gewenste weergaveheaders
+                const headerMapping = {
+                    'Brand': 'Brand',
+                    'Brand 2': 'Brand2',
+                    'Brand 3': 'Brand3',
+                    'Box': '# Box',
+                    '€ Unit': '€ Unit',
+                    '€ Box': '€ Box',
+                    'Size': 'Size',
+                    'Country': 'Country',
+                };
+                
+                // Vind de indexen van de relevante kolommen in het CSV-bestand
+                const headerIndices = {};
+                rawHeaders.forEach((header, index) => {
+                    const mappedHeader = headerMapping[header];
+                    if (mappedHeader) {
+                        headerIndices[mappedHeader] = index;
+                    }
                 });
+
+                // Parse de data met behulp van de gevonden indexen
+                const parsedData = dataRows.map(line => {
+                    const values = line.split(';');
+                    const rowObject = {};
+
+                    // Map waarden naar de nieuwe headers op basis van de indexen
+                    headers.forEach(header => {
+                        const index = headerIndices[header];
+                        if (index !== undefined) {
+                            rowObject[header] = values[index]?.trim();
+                        } else if (header === 'Stock') {
+                            // Voeg de hardcoded 'Stock' kolom toe
+                            rowObject['Stock'] = 'In Stock';
+                        } else {
+                             rowObject[header] = 'N/A';
+                        }
+                    });
+
+                    return rowObject;
+                });
+
                 return parsedData;
             };
 
