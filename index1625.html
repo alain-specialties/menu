@@ -85,20 +85,20 @@
                 // Eerste regel zijn de headers uit het CSV-bestand
                 const rawHeaders = lines[0].split(';').map(h => h.trim());
 
-                // Definieer een mapping van de ruwe headers naar de gewenste weergaveheaders
-                const headerMapping = {
-                    'Brand': 'Brand',
-                    'Brand 2': 'Brand2',
-                    'Brand 3': 'Brand3',
-                    'Box': '# Box',
-                    '€ Unit': '€ Unit',
-                    '€ Box': '€ Box',
-                    'Size': 'Size',
-                    'Country': 'Country',
-                };
+                // Definieer de gewenste weergegeven headers en hun bijbehorende CSV-headers
+                const desiredColumns = [
+                    { csvHeader: 'Brand', displayHeader: 'Brand' },
+                    { csvHeader: 'Brand 2', displayHeader: 'Brand2' },
+                    { csvHeader: 'Brand 3', displayHeader: 'Brand3' },
+                    { csvHeader: 'Box', displayHeader: '# Box' },
+                    { csvHeader: '€ Unit', displayHeader: '€ Unit' },
+                    { csvHeader: '€ Box', displayHeader: '€ Box' },
+                    { csvHeader: 'Size', displayHeader: 'Size' },
+                    { csvHeader: 'Country', displayHeader: 'Country' }
+                ];
                 
-                // Creëer de dynamische headers en voeg 'Stock' toe als eerste
-                const dynamicHeaders = ['Stock', ...rawHeaders.map(h => headerMapping[h] || h)];
+                // Creëer de dynamische headers-lijst
+                const dynamicHeaders = ['Stock', ...desiredColumns.map(col => col.displayHeader)];
                 setHeaders(dynamicHeaders);
 
                 const dataRows = lines.slice(1);
@@ -108,9 +108,13 @@
                     const values = line.split(';');
                     const rowObject = { 'Stock': 'In Stock' }; // Voeg de 'Stock' kolom toe
 
-                    rawHeaders.forEach((header, index) => {
-                        const mappedHeader = headerMapping[header] || header;
-                        rowObject[mappedHeader] = values[index]?.trim();
+                    desiredColumns.forEach(col => {
+                        const csvIndex = rawHeaders.indexOf(col.csvHeader);
+                        if (csvIndex !== -1) {
+                            rowObject[col.displayHeader] = values[csvIndex]?.trim();
+                        } else {
+                            rowObject[col.displayHeader] = 'N/A'; // Standaardwaarde als de kolom niet wordt gevonden
+                        }
                     });
 
                     return rowObject;
@@ -209,13 +213,11 @@
                 });
 
                 return (
-                    <div className="min-h-screen bg-gray-100 p-8 font-sans antialiased">
-                        <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-xl p-6">
+                    // Aangepaste container voor betere pasvorm op pc-scherm
+                    <div className="p-4 md:p-6 bg-gray-100 font-sans antialiased">
+                        <div className="mx-auto w-full max-w-screen-xl bg-white rounded-lg shadow-xl p-4 md:p-6">
                             <div className="mb-8 text-center">
                                 <h1 className="text-4xl font-extrabold text-gray-800">Cigar Data Viewer</h1>
-                                <p className="mt-2 text-lg text-gray-600">
-                                    Gegevens geladen uit het bestand data.csv.
-                                </p>
                             </div>
 
                             {/* Zoekbalk */}
