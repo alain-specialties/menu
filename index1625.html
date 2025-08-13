@@ -1,287 +1,143 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cigar Data Viewer - Login</title>
-    <!-- Laad Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Laad React en ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Laad Babel voor JSX-transpilatie in de browser -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <style>
-        /* CSS om tekstselectie te voorkomen */
-        body {
-            -webkit-user-select: none; /* Safari */
-            -moz-user-select: none; /* Firefox */
-            -ms-user-select: none; /* IE10+/Edge */
-            user-select: none; /* Standaard syntax */
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Data Viewer</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #111;
+        color: white;
+        padding: 20px;
+        user-select: none; /* Blokkeer tekstselectie */
+    }
+    h1 {
+        text-align: center;
+        color: #c0a16b;
+    }
+    #loginBox {
+        text-align: center;
+        margin-top: 100px;
+    }
+    input {
+        padding: 8px;
+        margin: 5px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+    th, td {
+        border: 1px solid #555;
+        padding: 6px;
+        text-align: center;
+    }
+    th {
+        background-color: #333;
+    }
+    tr:nth-child(even) {
+        background-color: #222;
+    }
+    #searchBox {
+        margin: 10px 0;
+        padding: 8px;
+        width: 300px;
+    }
+</style>
 </head>
-<body oncontextmenu="return false;">
-    <div id="root"></div>
+<body oncontextmenu="return false;"> <!-- Rechtsklik blokkeren -->
 
-    <script type="text/babel">
-        // Het volledige React-component wordt hierin geplaatst.
-        // Dit type script wordt door Babel in de browser omgezet naar standaard JavaScript.
+<h1>Sigaren Catalogus</h1>
 
-        const { useState, useEffect } = React;
+<div id="loginBox">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Gebruikersnaam"><br>
+    <input type="password" id="password" placeholder="Wachtwoord"><br>
+    <button onclick="checkLogin()">Inloggen</button>
+    <p id="loginError" style="color:red;"></p>
+</div>
 
-        const App = () => {
-            // State om de geparseerde CSV-data op te slaan
-            const [data, setData] = useState([]);
-            // State om de laadstatus te beheren
-            const [loading, setLoading] = useState(false);
-            // State om eventuele foutmeldingen op te slaan
-            const [error, setError] = useState(null);
+<div id="catalog" style="display:none;">
+    <input type="text" id="searchBox" placeholder="Zoeken..." onkeyup="filterTable()">
+    <table id="cigarTable">
+        <thead>
+            <tr>
+                <th>Stock</th>
+                <th>Brand</th>
+                <th>Brand 2</th>
+                <th>Brand 3</th>
+                <th>Box</th>
+                <th>€ Unit</th>
+                <th># Box</th>
+                <th>€ Box</th>
+                <th>Size</th>
+                <th>Country</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
 
-            // State voor loginfunctionaliteit
-            const [isLoggedIn, setIsLoggedIn] = useState(false);
-            const [username, setUsername] = useState('');
-            const [password, setPassword] = useState('');
-            const [loginError, setLoginError] = useState('');
-            
-            // State om de zoekterm op te slaan
-            const [searchTerm, setSearchTerm] = useState('');
+<script>
+// Login check
+function checkLogin() {
+    const user = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value.trim();
+    if (user === "Philbo" && pass === "sigaren2025") {
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("catalog").style.display = "block";
+        loadCSV();
+    } else {
+        document.getElementById("loginError").innerText = "Ongeldige login!";
+    }
+}
 
-            // Voeg een useEffect toe om toetsenbordgebeurtenissen te beheren
-            useEffect(() => {
-                const handleKeyDown = (e) => {
-                    // Blokkeer F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, Ctrl+C, Ctrl+A
-                    // Toegevoegd: Probeer ook de 'PrintScreen' toets te blokkeren
-                    if (
-                        e.key === 'F12' ||
-                        e.key === 'PrintScreen' ||
-                        (e.ctrlKey && e.shiftKey && e.key === 'I') ||
-                        (e.ctrlKey && e.shiftKey && e.key === 'J') ||
-                        (e.ctrlKey && e.key === 'U') ||
-                        (e.ctrlKey && e.key === 'c') ||
-                        (e.ctrlKey && e.key === 'a')
-                    ) {
-                        e.preventDefault();
-                    }
-                };
-
-                // Voeg de event listener toe
-                window.addEventListener('keydown', handleKeyDown);
-
-                // Verwijder de event listener bij het unmounten van de component
-                return () => {
-                    window.removeEventListener('keydown', handleKeyDown);
-                };
-            }, []);
-
-            // State om de kolomkoppen dynamisch op te slaan
-            const [headers, setHeaders] = useState([]);
-
-            // Functie om de CSV-tekst te parsen en de data te formatteren
-            const parseCsv = (csvText) => {
-                const lines = csvText.trim().split('\n');
-                if (lines.length <= 1) return [];
-
-                // Eerste regel zijn de headers uit het CSV-bestand
-                const rawHeaders = lines[0].split(';').map(h => h.trim());
-
-                // Definieer de gewenste weergegeven headers en hun bijbehorende CSV-headers
-                const desiredColumns = [
-                    { csvHeader: 'Brand', displayHeader: 'Brand' },
-                    { csvHeader: 'Brand 2', displayHeader: 'Brand2' },
-                    { csvHeader: 'Brand 3', displayHeader: 'Brand3' },
-                    { csvHeader: 'Box', displayHeader: '# Box' },
-                    { csvHeader: '€ Unit', displayHeader: '€ Unit' },
-                    { csvHeader: '€ Box', displayHeader: '€ Box' },
-                    { csvHeader: 'Size', displayHeader: 'Size' },
-                    { csvHeader: 'Country', displayHeader: 'Country' }
-                ];
-                
-                // Creëer de dynamische headers-lijst
-                const dynamicHeaders = ['Stock', ...desiredColumns.map(col => col.displayHeader)];
-                setHeaders(dynamicHeaders);
-
-                const dataRows = lines.slice(1);
-                
-                // Parse de data met behulp van de gevonden headers
-                const parsedData = dataRows.map(line => {
-                    const values = line.split(';');
-                    const rowObject = { 'Stock': 'In Stock' }; // Voeg de 'Stock' kolom toe
-
-                    desiredColumns.forEach(col => {
-                        const csvIndex = rawHeaders.indexOf(col.csvHeader);
-                        if (csvIndex !== -1) {
-                            rowObject[col.displayHeader] = values[csvIndex]?.trim();
-                        } else {
-                            rowObject[col.displayHeader] = 'N/A'; // Standaardwaarde als de kolom niet wordt gevonden
-                        }
-                    });
-
-                    return rowObject;
+// CSV laden en in tabel zetten
+function loadCSV() {
+    fetch("data.csv")
+        .then(response => response.text())
+        .then(data => {
+            const rows = data.trim().split("\n").slice(1); // eerste rij overslaan (headers)
+            const tbody = document.querySelector("#cigarTable tbody");
+            rows.forEach(row => {
+                const cols = row.split(",");
+                const tr = document.createElement("tr");
+                cols.forEach(col => {
+                    const td = document.createElement("td");
+                    td.innerText = col;
+                    tr.appendChild(td);
                 });
+                tbody.appendChild(tr);
+            });
+        });
+}
 
-                return parsedData;
-            };
+// Zoekfunctie
+function filterTable() {
+    const search = document.getElementById("searchBox").value.toLowerCase();
+    const rows = document.querySelectorAll("#cigarTable tbody tr");
+    rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(search) ? "" : "none";
+    });
+}
 
-            // Functie om het data.csv-bestand op te halen en te parsen
-            const loadData = async () => {
-                try {
-                    setLoading(true);
-                    const response = await fetch('./data.csv');
-                    if (!response.ok) {
-                        throw new Error('Bestand data.csv niet gevonden. Controleer of het bestand bestaat.');
-                    }
-                    const text = await response.text();
-                    const parsedData = parseCsv(text);
-                    setData(parsedData);
-                    setError(null);
-                } catch (err) {
-                    console.error("Fout bij het laden van de data:", err);
-                    setError(err.message);
-                } finally {
-                    setLoading(false);
-                }
-            };
+// PrintScreen detectie (niet waterdicht)
+document.addEventListener("keyup", function(e) {
+    if (e.key === "PrintScreen") {
+        alert("Print Screen is gedeactiveerd!");
+        navigator.clipboard.writeText(""); // leeg clipboard
+    }
+});
 
-            // Loginpoging verwerken
-            const handleLogin = (e) => {
-                e.preventDefault();
-                // De geactualiseerde inloggegevens
-                if (username === 'Philbo' && password === 'sigaren2025') {
-                    setIsLoggedIn(true);
-                    setLoginError('');
-                    loadData(); // Laad de data na een succesvolle login
-                } else {
-                    setLoginError('Ongeldige gebruikersnaam of wachtwoord.');
-                }
-            };
+// Blokkeer Ctrl+C, Ctrl+P
+document.addEventListener("keydown", function(e) {
+    if ((e.ctrlKey && e.key.toLowerCase() === "c") || (e.ctrlKey && e.key.toLowerCase() === "p")) {
+        e.preventDefault();
+        alert("Kopiëren en printen is geblokkeerd!");
+    }
+});
+</script>
 
-            const renderLoginForm = () => (
-                <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8">
-                    <div className="w-full max-w-md bg-white rounded-lg shadow-xl p-8">
-                        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Inloggen</h2>
-                        {loginError && (
-                            <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
-                                {loginError}
-                            </div>
-                        )}
-                        <form onSubmit={handleLogin}>
-                            <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
-                                    Gebruikersnaam
-                                </label>
-                                <input
-                                    id="username"
-                                    type="text"
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                />
-                            </div>
-                            <div className="mb-6">
-                                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-                                    Wachtwoord
-                                </label>
-                                <input
-                                    id="password"
-                                    type="password"
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <button
-                                    type="submit"
-                                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline w-full transition duration-300 ease-in-out"
-                                >
-                                    Inloggen
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            );
-
-            const renderDataTable = () => {
-                // Filter de data op basis van de zoekterm
-                const filteredData = data.filter(row => {
-                    const lowerCaseSearchTerm = searchTerm.toLowerCase();
-                    return headers.some(header => 
-                        row[header]?.toLowerCase().includes(lowerCaseSearchTerm)
-                    );
-                });
-
-                return (
-                    // Aangepaste container voor betere pasvorm op pc-scherm
-                    <div className="p-4 md:p-6 bg-gray-100 font-sans antialiased">
-                        <div className="mx-auto w-full max-w-screen-xl bg-white rounded-lg shadow-xl p-4 md:p-6">
-                            <div className="mb-8 text-center">
-                                <h1 className="text-4xl font-extrabold text-gray-800">Cigar Data Viewer</h1>
-                            </div>
-
-                            {/* Zoekbalk */}
-                            <div className="mb-6">
-                                <input
-                                    type="text"
-                                    placeholder="Zoeken..."
-                                    className="p-3 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
-                            
-                            {loading ? (
-                                <div className="flex justify-center items-center h-40">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-blue-500 border-blue-200"></div>
-                                    <span className="ml-4 text-gray-600">Laden...</span>
-                                </div>
-                            ) : error ? (
-                                <div className="text-center p-4 bg-red-100 text-red-700 rounded-md">
-                                    <p>{error}</p>
-                                </div>
-                            ) : (
-                                <div className="overflow-x-auto rounded-lg shadow-md">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                {headers.map((header) => (
-                                                    <th
-                                                        key={header}
-                                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                                    >
-                                                        {header}
-                                                    </th>
-                                                ))}
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {filteredData.map((row, rowIndex) => (
-                                                <tr key={rowIndex} className="hover:bg-gray-50 transition-colors">
-                                                    {headers.map((header) => (
-                                                        <td
-                                                            key={header}
-                                                            className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                                                        >
-                                                            {row[header] || 'N/A'}
-                                                        </td>
-                                                    ))}
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );
-            };
-
-            return isLoggedIn ? renderDataTable() : renderLoginForm();
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
 </body>
 </html>
