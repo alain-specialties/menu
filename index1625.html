@@ -2,54 +2,27 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<title>Data Viewer</title>
+<title>Sigaren Catalogus</title>
 <style>
     body {
         font-family: Arial, sans-serif;
         background-color: #111;
         color: white;
         padding: 20px;
-        user-select: none; /* Blokkeer tekstselectie */
+        user-select: none;
     }
-    h1 {
-        text-align: center;
-        color: #c0a16b;
-    }
-    #loginBox {
-        text-align: center;
-        margin-top: 100px;
-    }
-    input {
-        padding: 8px;
-        margin: 5px;
-    }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 15px;
-    }
-    th, td {
-        border: 1px solid #555;
-        padding: 6px;
-        text-align: center;
-    }
-    th {
-        background-color: #333;
-    }
-    tr:nth-child(even) {
-        background-color: #222;
-    }
-    #searchBox {
-        margin: 10px 0;
-        padding: 8px;
-        width: 300px;
-    }
+    h1 { text-align: center; color: #c0a16b; }
+    #loginBox { text-align: center; margin-top: 100px; }
+    input { padding: 8px; margin: 5px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #555; padding: 6px; text-align: center; }
+    th { background-color: #333; }
+    tr:nth-child(even) { background-color: #222; }
+    #searchBox { margin: 10px 0; padding: 8px; width: 300px; }
 </style>
 </head>
-<body oncontextmenu="return false;"> <!-- Rechtsklik blokkeren -->
-
+<body oncontextmenu="return false;">
 <h1>Sigaren Catalogus</h1>
-
 <div id="loginBox">
     <h2>Login</h2>
     <input type="text" id="username" placeholder="Gebruikersnaam"><br>
@@ -57,9 +30,9 @@
     <button onclick="checkLogin()">Inloggen</button>
     <p id="loginError" style="color:red;"></p>
 </div>
-
 <div id="catalog" style="display:none;">
     <input type="text" id="searchBox" placeholder="Zoeken..." onkeyup="filterTable()">
+    <div id="status" style="margin:6px 0; font-size: 0.9rem; color:#f5c542;"></div>
     <table id="cigarTable">
         <thead>
             <tr>
@@ -78,9 +51,105 @@
         <tbody></tbody>
     </table>
 </div>
-
 <script>
-// Login check
+// ===== Helpers =====
+function stripBOM(s){ return s && s.charCodeAt(0)===0xFEFF ? s.slice(1) : s; }
+
+function detectDelimiter(text){
+    const firstLine = (text.split(/
+?
+/).find(l=>l.trim().length>0) || "");
+    const counts = { ';':0, ',':0, '	':0, '|':0 };
+    let inQuotes = false;
+    for (let i=0;i<firstLine.length;i++){
+        const ch = firstLine[i];
+        if (ch === '"'){
+            if (inQuotes && firstLine[i+1] === '"'){ i++; continue; }
+            inQuotes = !inQuotes; continue;
+        }
+        if (!inQuotes && counts.hasOwnProperty(ch)) counts[ch]++;
+    }
+    let best = ';', bestCount = -1;
+    for (const k in counts){ if (counts[k] > bestCount){ best = k; bestCount = counts[k]; } }
+    return bestCount <= 0 ? ';' : best; // Europees CSV vaak ';'
+}
+
+function parseCSV(text, delimiter){
+    const rows = [];
+    let row = [], field = '';
+    let inQuotes = false;
+    for (let i=0;i<text.length;i++){
+        const ch = text[i];
+        if (ch === '"'){
+            if (inQuotes && text[i+1] === '"'){ field += '"'; i++; continue; }
+            inQuotes = !inQuotes; continue;
+        }
+        if (!inQuotes && ch === delimiter){ row.push(field); field=''; continue; }
+        if (!inQuotes && (ch === '
+' || ch === '
+' && text[i+1] !== '
+')){
+            row.push(field); rows.push(row); row=[]; field=''; continue;
+        }
+        if (!inQuotes && ch === '
+'){ continue; }
+        field += ch;
+    }
+    if (field.length || row.length){ row.push(field); rows.push(row); }
+    return rows.filter(r => r.some(cell => String(cell).trim() !== ''));
+}
+
+function normalizeKey(s){
+    return String(s||'')
+        .toLowerCase()
+        .normalize('NFD').replace(/[̀-ͯ]/g,'')
+        .replace(/€/g,'eur')
+        .replace(/[^a-z0-9#]+/g,'');
+}
+
+const TARGETS = [
+  { label: 'Stock',  keys: ['stock','voorraad'], loose:['qty','quantity'] },
+  { label: 'Brand',  keys: ['brand'] },
+  { label: 'Brand 2',keys: ['brand2','brand_2','subbrand','lijn','line'] },
+  { label: 'Brand 3',keys: ['brand3','brand_3','series','serie','subline'] },
+  { label: 'Box',    keys: ['box','verpakking','pack','boxname','presentation'] },
+  { label: '€ Unit', keys: ['eurunit','unitprice','priceunit','prijsperstuk','prijsunit','uniteur','priceeur','eurpcs','eurperunit'], loose:['perunit','unit'] },
+  { label: '# Box',  keys: ['#box','qtybox','aantalperbox','aantalbox','unitsperbox','pcsperbox','perbox','nbox'] },
+  { label: '€ Box',  keys: ['eurbox','boxprice','prijsbox','prijsperbox','boxeur','eurperbox'] },
+  { label: 'Size',   keys: ['size','maat','afmeting','lengthring','format','vitola'] },
+  { label: 'Country',keys: ['country','land','origin','herkomst','origine'] }
+];
+
+function buildHeaderMapping(header){
+    const norm = header.map(normalizeKey);
+    const used = new Set();
+    const mapping = new Array(TARGETS.length).fill(-1);
+
+    function findIndex(keys, allowLoose){
+        // exact match first
+        for (let i=0;i<norm.length;i++){
+            if (used.has(i)) continue;
+            for (const k of keys){ if (norm[i] === k) { used.add(i); return i; } }
+        }
+        if (!allowLoose) return -1;
+        // loose contains match
+        for (let i=0;i<norm.length;i++){
+            if (used.has(i)) continue;
+            for (const k of keys){ if (norm[i].includes(k)) { used.add(i); return i; } }
+        }
+        return -1;
+    }
+
+    TARGETS.forEach((t, idx) => {
+        let i = findIndex(t.keys, false);
+        if (i === -1 && t.loose) i = findIndex(t.loose, true);
+        mapping[idx] = i;
+    });
+
+    return { mapping, norm };
+}
+
+// ===== Login check =====
 function checkLogin() {
     const user = document.getElementById("username").value.trim();
     const pass = document.getElementById("password").value.trim();
@@ -93,27 +162,59 @@ function checkLogin() {
     }
 }
 
-// CSV laden en in tabel zetten
+// ===== CSV laden en in tabel zetten =====
 function loadCSV() {
-    fetch("data.csv")
-        .then(response => response.text())
-        .then(data => {
-            const rows = data.trim().split("\n").slice(1); // eerste rij overslaan (headers)
+    const status = document.getElementById('status');
+    fetch("data.csv", { cache: 'no-cache' })
+        .then(response => { if (!response.ok) throw new Error('data.csv niet gevonden'); return response.text(); })
+        .then(text => {
+            text = stripBOM(text);
+            const delim = detectDelimiter(text);
+            const rows = parseCSV(text, delim);
+            if (!rows.length) throw new Error('CSV is leeg');
+
+            // Header mapping
+            const header = rows[0];
+            const { mapping, norm } = buildHeaderMapping(header);
+            const mappedCount = mapping.filter(i=>i>=0).length;
+            const haveHeader = mappedCount >= 5; // genoeg matches om aan te nemen dat eerste rij headers zijn
+
+            const dataRows = haveHeader ? rows.slice(1) : rows;
+            const headerUsed = haveHeader ? header : [];
+
+            // Fallback mapping als geen headers herkend: eerste 10 kolommen op volgorde
+            const effectiveMapping = mapping.map((i, idx) => (haveHeader && i>=0) ? i : idx);
+
+            // Render
             const tbody = document.querySelector("#cigarTable tbody");
-            rows.forEach(row => {
-                const cols = row.split(",");
+            tbody.innerHTML = '';
+            dataRows.forEach(r => {
                 const tr = document.createElement("tr");
-                cols.forEach(col => {
+                for (let c = 0; c < TARGETS.length; c++){
+                    const srcIdx = effectiveMapping[c];
                     const td = document.createElement("td");
-                    td.innerText = col;
+                    let val = r[srcIdx] !== undefined ? r[srcIdx] : '';
+                    td.textContent = val;
                     tr.appendChild(td);
-                });
+                }
                 tbody.appendChild(tr);
             });
+
+            // Status/mapping info
+            const mappingInfo = TARGETS.map((t, idx) => {
+                const mi = effectiveMapping[idx];
+                const head = headerUsed[mi] !== undefined ? headerUsed[mi] : `kolom ${mi+1}`;
+                return `${t.label} ← ${head}`;
+            }).join(' • ');
+
+            status.textContent = `Delimiter: ${delim === '	' ? 'TAB' : delim} • Rijen: ${dataRows.length} • Header-herkenning: ${mappedCount}/10 ${haveHeader ? '(gebruikt)' : '(geen betrouwbare headers, volgorde gebruikt)'} • ${mappingInfo}`;
+        })
+        .catch(err => {
+            status.textContent = 'Fout bij laden: ' + err.message;
         });
 }
 
-// Zoekfunctie
+// ===== Zoekfunctie =====
 function filterTable() {
     const search = document.getElementById("searchBox").value.toLowerCase();
     const rows = document.querySelectorAll("#cigarTable tbody tr");
@@ -122,19 +223,21 @@ function filterTable() {
     });
 }
 
-// PrintScreen detectie (niet waterdicht)
+// ===== Beperk kopiëren/printen (niet waterdicht) =====
 document.addEventListener("keyup", function(e) {
     if (e.key === "PrintScreen") {
         alert("Print Screen is gedeactiveerd!");
-        navigator.clipboard.writeText(""); // leeg clipboard
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText("");
+        }
     }
 });
 
-// Blokkeer Ctrl+C, Ctrl+P
 document.addEventListener("keydown", function(e) {
-    if ((e.ctrlKey && e.key.toLowerCase() === "c") || (e.ctrlKey && e.key.toLowerCase() === "p")) {
+    const k = e.key.toLowerCase();
+    if ((e.ctrlKey && (k === "c" || k === "p" || k === "s")) || (e.metaKey && (k === "c" || k === "p" || k === "s"))) {
         e.preventDefault();
-        alert("Kopiëren en printen is geblokkeerd!");
+        alert("Kopiëren/printen/opslaan is geblokkeerd!");
     }
 });
 </script>
