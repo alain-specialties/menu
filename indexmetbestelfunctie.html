@@ -171,7 +171,7 @@
             text-align: left;
             display: none; /* Standaard verborgen */
         }
-        #checkoutForm input {
+        #checkoutForm input, #checkoutForm textarea {
             width: calc(100% - 10px);
             margin-bottom: 10px;
         }
@@ -234,7 +234,8 @@
             <input type="text" id="customerAddress" placeholder="Adres"><br>
             <textarea id="customerNotes" placeholder="Opmerkingen over de bestelling..." rows="4"></textarea><br>
             <div class="payment-info">
-                <p>Vergeet niet een voorschot van 50% te betalen via de onderstaande link:</p>
+                <p>Vergeet niet een voorschot te betalen van 50% via de onderstaande link.</p>
+                <p id="depositAmount">Het te betalen voorschot is: €0.00</p>
                 <a href="https://revolut.me/alainthgq" target="_blank">revolut.me/alainthgq</a>
             </div>
             <button onclick="sendOrder()">Bestelling plaatsen</button>
@@ -339,7 +340,6 @@
             { label: 'Brand', keys: ['brand'] },
             { label: 'Brand 2', keys: ['brand2', 'brand_2', 'subbrand', 'lijn', 'line'] },
             { label: 'Brand 3', keys: ['brand3', 'brand_3', 'series', 'serie', 'subline'] },
-            { label: '€ Unit', keys: ['eurunit', 'unitprice', 'priceunit', 'prijsperstuk', 'prijsunit', 'uniteur', 'priceeur', 'eurpcs', 'eurperunit'], loose: ['perunit', 'unit'] },
             { label: '# Box', keys: ['#box', 'qtybox', 'aantalperbox', 'aantalbox', 'unitsperbox', 'pcsperbox', 'perbox', 'nbox'] },
             { label: '€ Box', keys: ['eurbox', 'boxprice', 'prijsbox', 'prijsperbox', 'boxeur', 'eurperbox'] },
             { label: 'Size', keys: ['size', 'maat', 'afmeting', 'lengthring', 'format', 'vitola'] },
@@ -391,12 +391,19 @@
         // ===== Modale vensterfuncties =====
         
         /**
-         * Toont een bericht in het modale venster.
+         * Toont een bericht in het modale venster. Verdwijnt na een ingestelde tijd.
          * @param {string} message Het bericht om weer te geven.
+         * @param {number} duration De duur in milliseconden. Standaard 3000ms.
          */
-        function showMessage(message) {
+        function showMessage(message, duration = 3000) {
             document.getElementById("messageText").textContent = message;
             document.getElementById("messageModal").style.display = "flex";
+
+            if (duration > 0) {
+                setTimeout(() => {
+                    hideMessage();
+                }, duration);
+            }
         }
 
         /**
@@ -452,7 +459,7 @@
                     renderTable(allData);
                 })
                 .catch(err => {
-                    showMessage('Fout bij laden: ' + err.message);
+                    showMessage('Fout bij laden: ' + err.message, 0); // Laat deze melding permanent zien
                 });
         }
 
@@ -471,7 +478,7 @@
             });
             // Voeg een header voor de bestelkolom toe
             const orderHeader = document.createElement("th");
-            orderHeader.textContent = "Bestellen";
+            orderHeader.textContent = "Bestellen (dozen)";
             headerRow.appendChild(orderHeader);
 
             const tbody = document.querySelector("#cigarTable tbody");
@@ -517,11 +524,11 @@
         /**
          * Voegt een product toe aan de winkelwagen.
          * @param {number} productId De ID van het product.
-         * @param {number} quantity De hoeveelheid die besteld moet worden.
+         * @param {number} quantity De hoeveelheid dozen die besteld moet worden.
          */
         function addToCart(productId, quantity) {
-            if (quantity <= 0) {
-                showMessage("Hoeveelheid moet groter zijn dan 0.");
+            if (quantity <= 0 || isNaN(quantity)) {
+                showMessage("Hoeveelheid dozen moet groter zijn dan 0.", 3000);
                 return;
             }
 
@@ -553,15 +560,15 @@
             
             cart.forEach(item => {
                 const li = document.createElement("li");
-                const priceString = item['€ Unit'] || '0';
-                const unitPrice = parseFloat(priceString.replace(',', '.'));
-                const itemTotal = unitPrice * item.quantity;
+                const priceString = item['€ Box'] || '0';
+                const boxPrice = parseFloat(priceString.replace(',', '.'));
+                const itemTotal = boxPrice * item.quantity;
                 total += itemTotal;
 
                 li.innerHTML = `
                     <div>
-                        <span>${item.quantity} x ${item['Brand']} - ${item['Brand 2']}</span>
-                        <span>€${unitPrice.toFixed(2)}</span>
+                        <span>${item.quantity} x doos van ${item['Brand']} - ${item['Brand 2']}</span>
+                        <span>€${boxPrice.toFixed(2)}</span>
                     </div>
                     <div class="quantity-controls">
                         <button onclick="updateQuantity(${item.id}, -1)">-</button>
@@ -626,9 +633,22 @@
 
         function showCheckout() {
             if (cart.length === 0) {
-                showMessage("Uw winkelwagen is leeg. Voeg eerst producten toe.");
+                showMessage("Uw winkelwagen is leeg. Voeg eerst producten toe.", 3000);
                 return;
             }
+
+            // Bereken het totaal en de aanbetaling
+            let total = 0;
+            cart.forEach(item => {
+                const priceString = item['€ Box'] || '0';
+                const boxPrice = parseFloat(priceString.replace(',', '.'));
+                total += boxPrice * item.quantity;
+            });
+            const deposit = total * 0.5;
+
+            // Update de aanbetalingstekst in het formulier
+            document.getElementById('depositAmount').textContent = `Het te betalen voorschot is: €${deposit.toFixed(2)}`;
+            
             document.getElementById("catalog").style.display = "none";
             document.getElementById("cartSummary").style.display = "none";
             document.getElementById("checkoutForm").style.display = "block";
@@ -643,7 +663,7 @@
             const notes = document.getElementById("customerNotes").value;
 
             if (!name || !email) {
-                showMessage("Naam en e-mail zijn verplichte velden.");
+                showMessage("Naam en e-mail zijn verplichte velden.", 3000);
                 return;
             }
 
@@ -658,11 +678,11 @@
 
             let total = 0;
             cart.forEach(item => {
-                const priceString = item['€ Unit'] || '0';
-                const unitPrice = parseFloat(priceString.replace(',', '.'));
-                const itemTotal = unitPrice * item.quantity;
+                const priceString = item['€ Box'] || '0';
+                const boxPrice = parseFloat(priceString.replace(',', '.'));
+                const itemTotal = boxPrice * item.quantity;
                 total += itemTotal;
-                orderDetails += `- ${item.quantity} x ${item['Brand']} - ${item['Brand 2']} (${item.Size}) - €${unitPrice.toFixed(2)} per stuk\n`;
+                orderDetails += `- ${item.quantity} x doos van ${item['Brand']} - ${item['Brand 2']} (${item.Size}) - €${boxPrice.toFixed(2)} per doos\n`;
             });
             orderDetails += `\nTotaal te betalen: €${total.toFixed(2)}`;
 
@@ -675,7 +695,7 @@
             // Reset de winkelwagen na het verzenden
             cart = [];
             updateCartCount();
-            showMessage("Uw bestelling is verzonden! U kunt een e-mailclientvenster verwachten.");
+            showMessage("Uw bestelling is verzonden! U kunt een e-mailclientvenster verwachten.", 5000);
             showCatalog();
         }
 
@@ -731,7 +751,7 @@
             const k = e.key.toLowerCase();
             if (e.key === "PrintScreen" || (e.ctrlKey && (k === "c" || k === "p" || k === "s")) || (e.metaKey && (k === "c" || k === "p" || k === "s"))) {
                 e.preventDefault();
-                showMessage("Kopiëren/printen/opslaan is geblokkeerd!");
+                showMessage("Kopiëren/printen/opslaan is geblokkeerd!", 0); // Permanent
             }
         });
     </script>
