@@ -586,7 +586,7 @@
 
                 li.innerHTML = `
                     <div>
-                        <span>${item.quantity} x box of ${item['Brand']} - ${item['Brand 2']}</span>
+                        <span>${item.quantity} x box of ${item['Brand']} - ${item['Brand 2']} - ${item['Brand 3']} (${item.Size})</span>
                         <span>€${boxPrice.toFixed(2)}</span>
                     </div>
                     <div class="quantity-controls">
@@ -704,7 +704,8 @@
                 const boxPrice = parseFloat(priceString.replace(',', '.'));
                 const itemTotal = boxPrice * item.quantity;
                 total += itemTotal;
-                orderDetails += `- ${item.quantity} x box of ${item['Brand']} - ${item['Brand 2']} (${item.Size}) - €${boxPrice.toFixed(2)} per box\n`;
+                // Updated to include Brand, Brand 2, Brand 3, and Size
+                orderDetails += `- ${item.quantity} x box of ${item['Brand']} - ${item['Brand 2']} - ${item['Brand 3']} (${item.Size}) - €${boxPrice.toFixed(2)} per box\n`;
             });
 
             // Calculate the deposit and remaining amount
