@@ -22,7 +22,7 @@
     th.sort-asc::after { content: " \25B2"; }
     th.sort-desc::after { content: " \25BC"; }
     #legend { margin-top: 10px; font-size: 14px; color: #c0a16b; }
-    #disclaimer { margin-top: 15px; font-size: 13px; color: #c0a16b; font-style: italic; }
+    #disclaimer { margin-top: 10px; font-size: 13px; color: #c0a16b; font-style: italic; }
 </style>
 </head>
 <body oncontextmenu="return false;">
@@ -37,13 +37,13 @@
 <div id="catalog" style="display:none;">
     <input type="text" id="searchBox" placeholder="Zoeken..." onkeyup="filterTable()">
     <div id="legend">Legend: V = In stock  O = Pre-order if available</div>
+    <div id="disclaimer">All prices are subject to change. The official price on the tax band at delivery applies.</div>
     <table id="cigarTable">
         <thead>
             <tr id="headerRow"></tr>
         </thead>
         <tbody></tbody>
     </table>
-    <div id="disclaimer">All prices are subject to change. The price indicated on the official tax band at delivery is binding.</div>
 </div>
 <script>
 // ===== Helpers =====
