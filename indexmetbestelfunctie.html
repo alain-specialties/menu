@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Viewer Philbo</title>
+    <title>Philbo Data Viewer</title>
     <style>
-        /* Basisstijlen overgenomen van de originele code */
+        /* Base styles adopted from the original code */
         body {
             font-family: 'Inter', sans-serif;
             background-color: #111;
@@ -97,7 +97,7 @@
             font-style: italic;
         }
         
-        /* Nieuwe modal stijlen voor foutmeldingen en berichten */
+        /* New modal styles for error messages and notifications */
         #messageModal {
             display: none;
             position: fixed;
@@ -133,12 +133,12 @@
             cursor: pointer;
         }
 
-        /* Cart sectie stijlen */
+        /* Cart section styles */
         #cartSummary {
             margin-top: 20px;
             text-align: left;
             padding: 15px;
-            display: none; /* Standaard verborgen */
+            display: none; /* Hidden by default */
         }
         #cartSummary h3 {
             text-align: center;
@@ -165,11 +165,11 @@
             margin-top: 10px;
         }
 
-        /* Checkout formulier stijlen */
+        /* Checkout form styles */
         #checkoutForm {
             margin-top: 20px;
             text-align: left;
-            display: none; /* Standaard verborgen */
+            display: none; /* Hidden by default */
         }
         #checkoutForm input, #checkoutForm textarea {
             width: calc(100% - 10px);
@@ -182,29 +182,43 @@
             text-align: center;
             margin-top: 15px;
         }
+        #checkoutForm .payment-info a {
+            color: #e6b800;
+            text-decoration: underline;
+        }
+        #checkoutForm .payment-info a:hover {
+            color: #ffcc00;
+        }
 
-        /* Aangepaste stijl voor de 'Size' kolom om tekstterugloop te voorkomen */
+        /* Custom style for the 'Size' column to prevent text wrapping */
         #cigarTable th:nth-child(8),
         #cigarTable td:nth-child(8) {
             white-space: nowrap;
+        }
+        
+        /* New flexbox style for the order button and input field */
+        .order-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
     </style>
 </head>
 <body oncontextmenu="return false;">
     <div class="container">
-        <h1>Data Viewer Philbo</h1>
+        <h1>Philbo Data Viewer</h1>
         <div id="loginBox">
             <h2>Login</h2>
-            <input type="text" id="username" placeholder="Gebruikersnaam"><br>
-            <input type="password" id="password" placeholder="Wachtwoord"><br>
-            <button onclick="checkLogin()">Inloggen</button>
+            <input type="text" id="username" placeholder="Username"><br>
+            <input type="password" id="password" placeholder="Password"><br>
+            <button onclick="checkLogin()">Login</button>
             <p id="loginError" style="color:red;"></p>
         </div>
         <div id="catalog" style="display:none;">
-            <input type="text" id="searchBox" placeholder="Zoeken..." onkeyup="filterTable()">
+            <input type="text" id="searchBox" placeholder="Search..." onkeyup="filterTable()">
             <div id="legend">Legend: V = In stock &nbsp; O = Pre-order by BOX if available</div>
             <div id="disclaimer">Prices are indicative and subject to change. The final price is determined by the tax stamp at the time of delivery.</div>
-            <button class="cart-button" onclick="showCart()">Winkelwagen (<span id="cartItemCount">0</span>)</button>
+            <button class="cart-button" onclick="showCart()">Cart (<span id="cartItemCount">0</span>)</button>
             <table id="cigarTable">
                 <thead>
                     <tr id="headerRow"></tr>
@@ -213,37 +227,37 @@
             </table>
         </div>
         
-        <!-- Winkelwagen weergave -->
+        <!-- Cart summary -->
         <div id="cartSummary" style="display:none;">
-            <h3>Uw bestelling</h3>
+            <h3>Your Order</h3>
             <ul id="cartItemsList">
-                <!-- Winkelwagen items worden hier dynamisch toegevoegd -->
+                <!-- Cart items are dynamically added here -->
             </ul>
-            <p id="cartTotal">Totaal: €0.00</p>
-            <button onclick="showCheckout()">Verder naar afrekenen</button>
-            <button onclick="showCatalog()">Terug naar catalogus</button>
+            <p id="cartTotal">Total: €0.00</p>
+            <button onclick="showCheckout()">Proceed to Checkout</button>
+            <button onclick="showCatalog()">Back to Catalog</button>
         </div>
 
-        <!-- Afrekenformulier -->
+        <!-- Checkout form -->
         <div id="checkoutForm" style="display:none;">
-            <h3>Uw gegevens</h3>
-            <p>Vul uw gegevens in en plaats uw bestelling. De bestelling wordt naar ons verzonden via e-mail.</p>
-            <input type="text" id="customerName" placeholder="Naam" required><br>
-            <input type="email" id="customerEmail" placeholder="E-mail" required><br>
-            <input type="tel" id="customerPhone" placeholder="Telefoonnummer"><br>
-            <input type="text" id="customerAddress" placeholder="Adres"><br>
-            <textarea id="customerNotes" placeholder="Opmerkingen over de bestelling..." rows="4"></textarea><br>
+            <h3>Your Details</h3>
+            <p>Please enter your details and place your order. The order will be sent to us via email.</p>
+            <input type="text" id="customerName" placeholder="Name" required><br>
+            <input type="email" id="customerEmail" placeholder="Email" required><br>
+            <input type="tel" id="customerPhone" placeholder="Phone Number"><br>
+            <input type="text" id="customerAddress" placeholder="Address"><br>
+            <textarea id="customerNotes" placeholder="Order notes..." rows="4"></textarea><br>
             <div class="payment-info">
-                <p>Vergeet niet een voorschot te betalen van 50% via de onderstaande link.</p>
-                <p id="depositAmount">Het te betalen voorschot is: €0.00</p>
+                <p>Don't forget to pay a 50% deposit via the link below.</p>
+                <p id="depositAmount">The deposit amount is: €0.00</p>
                 <a href="https://revolut.me/alainthgq" target="_blank">revolut.me/alainthgq</a>
             </div>
-            <button onclick="sendOrder()">Bestelling plaatsen</button>
-            <button onclick="showCart()">Terug naar winkelwagen</button>
+            <button onclick="sendOrder()">Place Order</button>
+            <button onclick="showCart()">Back to Cart</button>
         </div>
     </div>
     
-    <!-- Modale venster voor berichten -->
+    <!-- Modal window for messages -->
     <div id="messageModal">
       <div class="modal-content">
         <span class="close-button" onclick="hideMessage()">&times;</span>
@@ -252,25 +266,25 @@
     </div>
     
     <script>
-        // Opslag voor de geladen data en sorteerstatus
+        // Storage for loaded data and sorting status
         let allData = [];
         let currentSort = { index: -1, asc: true };
-        // Winkelwagen opslag: Een array van objecten, elk met een product en hoeveelheid
+        // Cart storage: An array of objects, each with a product and quantity
         let cart = [];
 
-        // ===== Hulpfuncties =====
+        // ===== Helper Functions =====
         
         /**
-         * Verwijdert het UTF-8 Byte Order Mark (BOM) indien aanwezig.
-         * @param {string} s De invoerstring.
-         * @returns {string} De string zonder BOM.
+         * Removes the UTF-8 Byte Order Mark (BOM) if present.
+         * @param {string} s The input string.
+         * @returns {string} The string without the BOM.
          */
         function stripBOM(s) { return s && s.charCodeAt(0) === 0xFEFF ? s.slice(1) : s; }
 
         /**
-         * Detecteert het scheidingsteken van de CSV.
-         * @param {string} text De CSV-tekst.
-         * @returns {string} Het gedetecteerde scheidingsteken.
+         * Detects the CSV delimiter.
+         * @param {string} text The CSV text.
+         * @returns {string} The detected delimiter.
          */
         function detectDelimiter(text) {
             const firstLine = (text.split(/\r?\n/).find(l => l.trim().length > 0) || "");
@@ -295,10 +309,10 @@
         }
 
         /**
-         * Parseert CSV-tekst in een array van rijen.
-         * @param {string} text De CSV-tekst.
-         * @param {string} delimiter Het scheidingsteken.
-         * @returns {Array<Array<string>>} De geparseerde data.
+         * Parses CSV text into an array of rows.
+         * @param {string} text The CSV text.
+         * @param {string} delimiter The delimiter.
+         * @returns {Array<Array<string>>} The parsed data.
          */
         function parseCSV(text, delimiter) {
             const rows = [];
@@ -322,9 +336,9 @@
         }
 
         /**
-         * Normaliseert een string voor vergelijking.
-         * @param {string} s De invoerstring.
-         * @returns {string} De genormaliseerde string.
+         * Normalizes a string for comparison.
+         * @param {string} s The input string.
+         * @returns {string} The normalized string.
          */
         function normalizeKey(s) {
             return String(s || '')
@@ -334,7 +348,7 @@
                 .replace(/[^a-z0-9#]+/g, '');
         }
 
-        // Definities van de gewenste kolommen en hun mogelijke namen
+        // Definitions of the desired columns and their possible names
         const TARGETS = [
             { label: 'Stock', keys: ['stock', 'voorraad'], loose: ['qty', 'quantity'] },
             { label: 'Brand', keys: ['brand'] },
@@ -347,9 +361,9 @@
         ];
 
         /**
-         * Bouwt een mapping van de CSV-headers naar de gewenste kolommen.
-         * @param {Array<string>} header De array met de ruwe headers.
-         * @returns {{mapping: Array<number>, norm: Array<string>}} Een object met de mapping en genormaliseerde headers.
+         * Builds a mapping from the CSV headers to the desired columns.
+         * @param {Array<string>} header The array with the raw headers.
+         * @returns {{mapping: Array<number>, norm: Array<string>}} An object with the mapping and normalized headers.
          */
         function buildHeaderMapping(header) {
             const norm = header.map(normalizeKey);
@@ -388,12 +402,12 @@
             return { mapping, norm };
         }
 
-        // ===== Modale vensterfuncties =====
+        // ===== Modal window functions =====
         
         /**
-         * Toont een bericht in het modale venster. Verdwijnt na een ingestelde tijd.
-         * @param {string} message Het bericht om weer te geven.
-         * @param {number} duration De duur in milliseconden. Standaard 3000ms.
+         * Shows a message in the modal window. Disappears after a set time.
+         * @param {string} message The message to display.
+         * @param {number} duration The duration in milliseconds. Default is 3000ms.
          */
         function showMessage(message, duration = 3000) {
             document.getElementById("messageText").textContent = message;
@@ -407,7 +421,7 @@
         }
 
         /**
-         * Verbergt het modale venster.
+         * Hides the modal window.
          */
         function hideMessage() {
             document.getElementById("messageModal").style.display = "none";
@@ -422,22 +436,22 @@
                 document.getElementById("catalog").style.display = "block";
                 loadCSV();
             } else {
-                document.getElementById("loginError").innerText = "Ongeldige login!";
+                document.getElementById("loginError").innerText = "Invalid login!";
             }
         }
 
-        // ===== CSV laden en data opslaan =====
+        // ===== Load CSV and store data =====
         function loadCSV() {
             fetch("data.csv", { cache: 'no-cache' })
                 .then(response => {
-                    if (!response.ok) throw new Error('data.csv niet gevonden');
+                    if (!response.ok) throw new Error('data.csv not found');
                     return response.text();
                 })
                 .then(text => {
                     text = stripBOM(text);
                     const delim = detectDelimiter(text);
                     const rows = parseCSV(text, delim);
-                    if (!rows.length) throw new Error('CSV is leeg');
+                    if (!rows.length) throw new Error('CSV is empty');
                     
                     const header = rows[0];
                     const { mapping } = buildHeaderMapping(header);
@@ -445,9 +459,9 @@
                     const haveHeader = mappedCount >= 4;
                     const dataRows = haveHeader ? rows.slice(1) : rows;
 
-                    // Opslaan van de data in het geheugen voor snelle filtering en sortering
+                    // Store data in memory for quick filtering and sorting
                     allData = dataRows.map((row, index) => {
-                        const newRow = { id: index }; // Voeg een unieke ID toe aan elke rij
+                        const newRow = { id: index }; // Add a unique ID to each row
                         TARGETS.forEach((t, idx) => {
                             const srcIdx = mapping[idx];
                             newRow[t.label] = (srcIdx !== -1 && row[srcIdx] !== undefined) ? row[srcIdx] : '';
@@ -455,17 +469,17 @@
                         return newRow;
                     });
 
-                    // Render de tabel voor de eerste keer
+                    // Render the table for the first time
                     renderTable(allData);
                 })
                 .catch(err => {
-                    showMessage('Fout bij laden: ' + err.message, 0); // Laat deze melding permanent zien
+                    showMessage('Loading error: ' + err.message, 0); // Show this message permanently
                 });
         }
 
         /**
-         * Rendert de tabel met de meegegeven data, inclusief de bestelknoppen.
-         * @param {Array<Object>} data De array met data-objecten.
+         * Renders the table with the provided data, including order buttons.
+         * @param {Array<Object>} data The array of data objects.
          */
         function renderTable(data) {
             const headerRow = document.getElementById("headerRow");
@@ -476,9 +490,9 @@
                 th.addEventListener("click", () => sortTable(t.label));
                 headerRow.appendChild(th);
             });
-            // Voeg een header voor de bestelkolom toe
+            // Add a header for the order column
             const orderHeader = document.createElement("th");
-            orderHeader.textContent = "Bestellen (dozen)";
+            orderHeader.textContent = "Order (boxes)";
             headerRow.appendChild(orderHeader);
 
             const tbody = document.querySelector("#cigarTable tbody");
@@ -486,8 +500,8 @@
             if (data.length === 0) {
                 const tr = document.createElement("tr");
                 const td = document.createElement("td");
-                td.colSpan = TARGETS.length + 1; // +1 voor de nieuwe bestelkolom
-                td.textContent = "Geen resultaten gevonden.";
+                td.colSpan = TARGETS.length + 1; // +1 for the new order column
+                td.textContent = "No results found.";
                 td.style.textAlign = "center";
                 tr.appendChild(td);
                 tbody.appendChild(tr);
@@ -500,16 +514,18 @@
                         tr.appendChild(td);
                     });
 
-                    // Voeg de bestelkolom toe
+                    // Add the order column
                     const orderTd = document.createElement("td");
+                    // Use a flexbox wrapper div to keep elements on one line
+                    orderTd.classList.add('order-controls'); 
                     const orderInput = document.createElement("input");
                     orderInput.type = "number";
                     orderInput.min = "1";
                     orderInput.value = "1";
                     orderInput.style.width = "50px";
                     const addButton = document.createElement("button");
-                    addButton.textContent = "Voeg toe";
-                    // Gebruik de unieke ID om het juiste product te vinden
+                    addButton.textContent = "Add";
+                    // Use the unique ID to find the correct product
                     addButton.onclick = () => addToCart(row.id, parseInt(orderInput.value));
                     orderTd.appendChild(orderInput);
                     orderTd.appendChild(addButton);
@@ -520,15 +536,15 @@
             }
         }
 
-        // ===== Winkelwagen functionaliteit =====
+        // ===== Shopping cart functionality =====
         /**
-         * Voegt een product toe aan de winkelwagen.
-         * @param {number} productId De ID van het product.
-         * @param {number} quantity De hoeveelheid dozen die besteld moet worden.
+         * Adds a product to the cart.
+         * @param {number} productId The ID of the product.
+         * @param {number} quantity The number of boxes to order.
          */
         function addToCart(productId, quantity) {
             if (quantity <= 0 || isNaN(quantity)) {
-                showMessage("Hoeveelheid dozen moet groter zijn dan 0.", 3000);
+                showMessage("Box quantity must be greater than 0.", 3000);
                 return;
             }
 
@@ -540,11 +556,11 @@
                 cart.push({ ...product, quantity: quantity });
             }
             updateCartCount();
-            showMessage(`Product toegevoegd aan winkelwagen: ${quantity} x ${allData.find(item => item.id === productId)['Brand 2']}`);
+            showMessage(`Product added to cart: ${quantity} x ${allData.find(item => item.id === productId)['Brand 2']}`);
         }
 
         /**
-         * Rendert de winkelwagenoverzicht.
+         * Renders the shopping cart summary.
          */
         function renderCart() {
             const cartList = document.getElementById("cartItemsList");
@@ -553,8 +569,8 @@
             let total = 0;
 
             if (cart.length === 0) {
-                cartList.innerHTML = '<li>Uw winkelwagen is leeg.</li>';
-                cartTotalEl.textContent = 'Totaal: €0.00';
+                cartList.innerHTML = '<li>Your cart is empty.</li>';
+                cartTotalEl.textContent = 'Total: €0.00';
                 return;
             }
             
@@ -567,25 +583,25 @@
 
                 li.innerHTML = `
                     <div>
-                        <span>${item.quantity} x doos van ${item['Brand']} - ${item['Brand 2']}</span>
+                        <span>${item.quantity} x box of ${item['Brand']} - ${item['Brand 2']}</span>
                         <span>€${boxPrice.toFixed(2)}</span>
                     </div>
                     <div class="quantity-controls">
                         <button onclick="updateQuantity(${item.id}, -1)">-</button>
                         <span>${item.quantity}</span>
                         <button onclick="updateQuantity(${item.id}, 1)">+</button>
-                        <button onclick="removeItem(${item.id})">Verwijder</button>
+                        <button onclick="removeItem(${item.id})">Remove</button>
                     </div>
                 `;
                 cartList.appendChild(li);
             });
-            cartTotalEl.textContent = `Totaal: €${total.toFixed(2)}`;
+            cartTotalEl.textContent = `Total: €${total.toFixed(2)}`;
         }
         
         /**
-         * Update de hoeveelheid van een item in de winkelwagen.
-         * @param {number} productId De ID van het product.
-         * @param {number} change Het aantal om toe te voegen of te verwijderen.
+         * Updates the quantity of an item in the cart.
+         * @param {number} productId The ID of the product.
+         * @param {number} change The amount to add or remove.
          */
         function updateQuantity(productId, change) {
             const item = cart.find(i => i.id === productId);
@@ -600,8 +616,8 @@
         }
 
         /**
-         * Verwijdert een item uit de winkelwagen.
-         * @param {number} productId De ID van het product.
+         * Removes an item from the cart.
+         * @param {number} productId The ID of the product.
          */
         function removeItem(productId) {
             cart = cart.filter(item => item.id !== productId);
@@ -610,14 +626,14 @@
         }
         
         /**
-         * Update het aantal items in de winkelwagen-knop.
+         * Updates the item count in the cart button.
          */
         function updateCartCount() {
             const count = cart.reduce((sum, item) => sum + item.quantity, 0);
             document.getElementById("cartItemCount").textContent = count;
         }
 
-        // ===== Navigatie functionaliteit =====
+        // ===== Navigation functionality =====
         function showCatalog() {
             document.getElementById("catalog").style.display = "block";
             document.getElementById("cartSummary").style.display = "none";
@@ -633,28 +649,31 @@
 
         function showCheckout() {
             if (cart.length === 0) {
-                showMessage("Uw winkelwagen is leeg. Voeg eerst producten toe.", 3000);
+                showMessage("Your cart is empty. Please add products first.", 3000);
                 return;
             }
 
-            // Bereken het totaal en de aanbetaling
+            // Calculate the total
             let total = 0;
             cart.forEach(item => {
                 const priceString = item['€ Box'] || '0';
                 const boxPrice = parseFloat(priceString.replace(',', '.'));
                 total += boxPrice * item.quantity;
             });
-            const deposit = total * 0.5;
+            
+            // Calculate the deposit and round it up to the nearest ten
+            let deposit = total * 0.5;
+            deposit = Math.ceil(deposit / 10) * 10;
 
-            // Update de aanbetalingstekst in het formulier
-            document.getElementById('depositAmount').textContent = `Het te betalen voorschot is: €${deposit.toFixed(2)}`;
+            // Update the deposit text in the form
+            document.getElementById('depositAmount').textContent = `The deposit amount is: €${deposit.toFixed(2)}`;
             
             document.getElementById("catalog").style.display = "none";
             document.getElementById("cartSummary").style.display = "none";
             document.getElementById("checkoutForm").style.display = "block";
         }
 
-        // ===== Bestelling verzenden =====
+        // ===== Send order =====
         function sendOrder() {
             const name = document.getElementById("customerName").value;
             const email = document.getElementById("customerEmail").value;
@@ -663,18 +682,18 @@
             const notes = document.getElementById("customerNotes").value;
 
             if (!name || !email) {
-                showMessage("Naam en e-mail zijn verplichte velden.", 3000);
+                showMessage("Name and email are required fields.", 3000);
                 return;
             }
 
-            let orderDetails = "Bestelling van " + name + "\n\n";
-            orderDetails += "Contactgegevens:\n";
-            orderDetails += "Naam: " + name + "\n";
-            orderDetails += "E-mail: " + email + "\n";
-            if (phone) orderDetails += "Telefoon: " + phone + "\n";
-            if (address) orderDetails += "Adres: " + address + "\n";
-            if (notes) orderDetails += "\nOpmerkingen:\n" + notes + "\n";
-            orderDetails += "\nBestelde producten:\n";
+            let orderDetails = "Order from " + name + "\n\n";
+            orderDetails += "Contact details:\n";
+            orderDetails += "Name: " + name + "\n";
+            orderDetails += "Email: " + email + "\n";
+            if (phone) orderDetails += "Phone: " + phone + "\n";
+            if (address) orderDetails += "Address: " + address + "\n";
+            if (notes) orderDetails += "\nNotes:\n" + notes + "\n";
+            orderDetails += "\nOrdered products:\n";
 
             let total = 0;
             cart.forEach(item => {
@@ -682,24 +701,35 @@
                 const boxPrice = parseFloat(priceString.replace(',', '.'));
                 const itemTotal = boxPrice * item.quantity;
                 total += itemTotal;
-                orderDetails += `- ${item.quantity} x doos van ${item['Brand']} - ${item['Brand 2']} (${item.Size}) - €${boxPrice.toFixed(2)} per doos\n`;
+                orderDetails += `- ${item.quantity} x box of ${item['Brand']} - ${item['Brand 2']} (${item.Size}) - €${boxPrice.toFixed(2)} per box\n`;
             });
-            orderDetails += `\nTotaal te betalen: €${total.toFixed(2)}`;
 
-            const subject = encodeURIComponent("Bestelling van " + name);
+            // Calculate the deposit and remaining amount
+            let deposit = total * 0.5;
+            deposit = Math.ceil(deposit / 10) * 10;
+            const remaining = total - deposit;
+            
+            // Add the amounts to the email body
+            orderDetails += `\nTotal order amount: €${total.toFixed(2)}`;
+            orderDetails += `\nDeposit paid: €${deposit.toFixed(2)}`;
+            orderDetails += `\nRemaining amount to pay: €${remaining.toFixed(2)}`;
+
+            const subject = encodeURIComponent("Philbo Data Viewer Order - Order from " + name);
             const body = encodeURIComponent(orderDetails);
 
-            // Gebruik mailto: om de bestelling via e-mail te verzenden
-            window.location.href = `mailto:philbo@example.com?subject=${subject}&body=${body}`;
-
-            // Reset de winkelwagen na het verzenden
+            // Use window.open() to open the mailto link in a new tab
+            window.open(`mailto:philbo@example.com?subject=${subject}&body=${body}`, '_blank');
+            
+            // Show a message to inform the user and reset the cart
+            showMessage("Your order has been sent! An email client window should open.", 5000);
+            
+            // Reset the cart after sending
             cart = [];
             updateCartCount();
-            showMessage("Uw bestelling is verzonden! U kunt een e-mailclientvenster verwachten.", 5000);
             showCatalog();
         }
 
-        // ===== Zoekfunctie =====
+        // ===== Search function =====
         function filterTable() {
             const search = document.getElementById("searchBox").value.toLowerCase();
             const filteredData = allData.filter(row => {
@@ -710,12 +740,12 @@
             renderTable(filteredData);
         }
 
-        // ===== Sorteren =====
+        // ===== Sorting =====
         function sortTable(key) {
             const isAsc = currentSort.key !== key || !currentSort.asc;
             currentSort = { key, asc: isAsc };
             
-            // Sorteer de allData array
+            // Sort the allData array
             allData.sort((a, b) => {
                 const A = String(a[key] || '').trim();
                 const B = String(b[key] || '').trim();
@@ -727,16 +757,16 @@
                 if (!isNaN(numA) && !isNaN(numB)) {
                     result = numA - numB;
                 } else {
-                    result = A.localeCompare(B, 'nl', { sensitivity: 'base' });
+                    result = A.localeCompare(B, 'en', { sensitivity: 'base' });
                 }
                 
                 return isAsc ? result : -result;
             });
             
-            // Render de gesorteerde data
+            // Render the sorted data
             renderTable(allData);
             
-            // Update de headerklasse voor visuele indicatie
+            // Update the header class for visual indication
             const headers = document.querySelectorAll("#headerRow th");
             headers.forEach(h => {
                 h.classList.remove("sort-asc", "sort-desc");
@@ -746,12 +776,12 @@
             });
         }
 
-        // ===== Beperk kopiëren/printen =====
+        // ===== Restrict copying/printing =====
         document.addEventListener("keydown", function(e) {
             const k = e.key.toLowerCase();
             if (e.key === "PrintScreen" || (e.ctrlKey && (k === "c" || k === "p" || k === "s")) || (e.metaKey && (k === "c" || k === "p" || k === "s"))) {
                 e.preventDefault();
-                showMessage("Kopiëren/printen/opslaan is geblokkeerd!", 0); // Permanent
+                showMessage("Copying/printing/saving is blocked!", 0); // Permanent
             }
         });
     </script>
