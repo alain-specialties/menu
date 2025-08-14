@@ -398,7 +398,8 @@
                     const tr = document.createElement("tr");
                     TARGETS.forEach((t) => {
                         const td = document.createElement("td");
-                        td.textContent = row[t.label] || 'N/A';
+                        // Aangepaste regel: toon een lege cel in plaats van 'N/A'
+                        td.textContent = row[t.label] || '';
                         tr.appendChild(td);
                     });
                     tbody.appendChild(tr);
