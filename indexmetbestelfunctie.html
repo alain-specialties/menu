@@ -190,10 +190,13 @@
             color: #ffcc00;
         }
 
-        /* Custom style for the 'Size' column to prevent text wrapping */
-        #cigarTable th:nth-child(8),
-        #cigarTable td:nth-child(8) {
+        /* FIX: Custom style for the 'Size' column to prevent text wrapping.
+           This ensures the content of the 8th column stays on a single line. */
+        #cigarTable th:nth-child(7),
+        #cigarTable td:nth-child(7) {
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         /* New flexbox style for the order button and input field */
@@ -218,7 +221,7 @@
             <input type="text" id="searchBox" placeholder="Search..." onkeyup="filterTable()">
             <div id="legend">Legend: V = In stock &nbsp; O = Pre-order by BOX if available</div>
             <div id="disclaimer">Prices are indicative and subject to change. The final price is determined by the tax stamp at the time of delivery.</div>
-            <button class="cart-button" onclick="showCart()">Cart (<span id="cartItemCount">0</span>)</button>
+            <button class="cart-button" onclick="showCart()">🛒 Cart (<span id="cartItemCount">0</span>)</button>
             <table id="cigarTable">
                 <thead>
                     <tr id="headerRow"></tr>
@@ -718,7 +721,7 @@
             const body = encodeURIComponent(orderDetails);
 
             // Use window.open() to open the mailto link in a new tab
-            window.open(`mailto:philbo@example.com?subject=${subject}&body=${body}`, '_blank');
+            window.open(`mailto:info@philbo.be?subject=${subject}&body=${body}`, '_blank');
             
             // Show a message to inform the user and reset the cart
             showMessage("Your order has been sent! An email client window should open.", 5000);
