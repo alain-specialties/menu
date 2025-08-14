@@ -35,7 +35,7 @@
     <p id="loginError" style="color:red;"></p>
 </div>
 <div id="catalog" style="display:none;">
-    <input type="text" id="searchBox" placeholder="Zoeken..." onkeyup="filterTable()">
+    <input type="text" id="searchBox" placeholder="Zoeken..." onkeyup="debouncedFilter()">
     <div id="legend">Legend: V = In stock  O = Pre-order if available</div>
     <div id="disclaimer">Prices are indicative and subject to change. The final price is determined by the tax stamp at the time of delivery.</div>
     <table id="cigarTable">
@@ -195,7 +195,13 @@ function loadCSV() {
         });
 }
 
-// ===== Zoekfunctie =====
+// ===== Zoekfunctie met debounce =====
+let searchTimeout;
+function debouncedFilter() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(filterTable, 200);
+}
+
 function filterTable() {
     const search = document.getElementById("searchBox").value.toLowerCase();
     const rows = document.querySelectorAll("#cigarTable tbody tr");
