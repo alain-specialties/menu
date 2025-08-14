@@ -34,7 +34,6 @@
 </div>
 <div id="catalog" style="display:none;">
     <input type="text" id="searchBox" placeholder="Zoeken..." onkeyup="filterTable()">
-    <div id="status" style="margin:6px 0; font-size: 0.9rem; color:#f5c542;"></div>
     <table id="cigarTable">
         <thead>
             <tr id="headerRow"></tr>
@@ -146,7 +145,6 @@ function checkLogin() {
 
 // ===== CSV laden en in tabel zetten =====
 function loadCSV() {
-    const status = document.getElementById('status');
     fetch("data.csv", { cache: 'no-cache' })
         .then(response => { if (!response.ok) throw new Error('data.csv niet gevonden'); return response.text(); })
         .then(text => {
@@ -187,11 +185,9 @@ function loadCSV() {
                 });
                 tbody.appendChild(tr);
             });
-
-            status.textContent = `Delimiter: ${delim==='\t'?'TAB':delim} • Rijen: ${dataRows.length} • Header-herkenning: ${mappedCount}/9 ${haveHeader ? '(gebruikt)' : '(geen betrouwbare headers, volgorde gebruikt)'}`;
         })
         .catch(err => {
-            status.textContent = 'Fout bij laden: ' + err.message;
+            alert('Fout bij laden: ' + err.message);
         });
 }
 
@@ -254,3 +250,4 @@ document.addEventListener("keydown", function(e) {
 
 </body>
 </html>
+
