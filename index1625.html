@@ -132,6 +132,12 @@
             text-decoration: none;
             cursor: pointer;
         }
+        
+        /* Aangepaste stijl voor de 'Size' kolom om tekstterugloop te voorkomen */
+        #cigarTable th:nth-child(8),
+        #cigarTable td:nth-child(8) {
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -398,7 +404,6 @@
                     const tr = document.createElement("tr");
                     TARGETS.forEach((t) => {
                         const td = document.createElement("td");
-                        // Aangepaste regel: toon een lege cel in plaats van 'N/A'
                         td.textContent = row[t.label] || '';
                         tr.appendChild(td);
                     });
