@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Viewer Philbo</title>
+    <style>
+        /* Basisstijlen overgenomen van de originele code */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111;
+            color: #c0a16b;
+            padding: 20px;
+            user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .container {
+            width: 90%;
+            max-width: 1200px;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #c0a16b;
+        }
+        #loginBox, #orderBox, #cartSummary, #checkoutForm, #orderConfirmation {
+            text-align: center;
+            margin-top: 100px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #222;
+        }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: #c0a16b;
+        }
+        button, .cart-button {
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 5px;
+            background-color: #555;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover, .cart-button:hover {
+            background-color: #777;
+        }
+        #loginError, #messageBox {
+            color: red;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            cursor: default;
+        }
+        th, td {
+            border: 1px solid #555;
+            padding: 8px;
+            text-align: left;
+            color: #c0a16b;
+        }
+        th {
+            background-color: #333;
+            cursor: pointer;
+        }
+        tr:nth-child(even) {
+            background-color: #222;
+        }
+        #searchBox {
+            margin: 10px 0;
+            padding: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        th.sort-asc::after {
+            content: " \25B2";
+        }
+        th.sort-desc::after {
+            content: " \25BC";
+        }
+        #legend, #disclaimer {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #c0a16b;
+        }
+        #disclaimer {
+            font-style: italic;
+        }
+        
+        /* Nieuwe modal stijlen voor foutmeldingen en berichten */
+        #messageModal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #333;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .close-button {
+            color: #c0a16b;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Cart sectie stijlen */
+        #cartSummary {
+            margin-top: 20px;
+            text-align: left;
+            padding: 15px;
+            display: none; /* Standaard verborgen */
+        }
+        #cartSummary h3 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        #cartItemsList {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        #cartItemsList li {
+            border-bottom: 1px solid #444;
+            padding: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .quantity-controls button {
+            padding: 2px 8px;
+        }
+        #cartTotal {
+            font-weight: bold;
+            text-align: right;
+            margin-top: 10px;
+        }
+
+        /* Checkout formulier stijlen */
+        #checkoutForm {
+            margin-top: 20px;
+            text-align: left;
+            display: none; /* Standaard verborgen */
+        }
+        #checkoutForm input {
+            width: calc(100% - 10px);
+            margin-bottom: 10px;
+        }
+        #checkoutForm .payment-info {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        /* Aangepaste stijl voor de 'Size' kolom om tekstterugloop te voorkomen */
+        #cigarTable th:nth-child(8),
+        #cigarTable td:nth-child(8) {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+    <div class="container">
+        <h1>Data Viewer Philbo</h1>
+        <div id="loginBox">
+            <h2>Login</h2>
+            <input type="text" id="username" placeholder="Gebruikersnaam"><br>
+            <input type="password" id="password" placeholder="Wachtwoord"><br>
+            <button onclick="checkLogin()">Inloggen</button>
+            <p id="loginError" style="color:red;"></p>
+        </div>
+        <div id="catalog" style="display:none;">
+            <input type="text" id="searchBox" placeholder="Zoeken..." onkeyup="filterTable()">
+            <div id="legend">Legend: V = In stock &nbsp; O = Pre-order by BOX if available</div>
+            <div id="disclaimer">Prices are indicative and subject to change. The final price is determined by the tax stamp at the time of delivery.</div>
+            <button class="cart-button" onclick="showCart()">Winkelwagen (<span id="cartItemCount">0</span>)</button>
+            <table id="cigarTable">
+                <thead>
+                    <tr id="headerRow"></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        
+        <!-- Winkelwagen weergave -->
+        <div id="cartSummary" style="display:none;">
+            <h3>Uw bestelling</h3>
+            <ul id="cartItemsList">
+                <!-- Winkelwagen items worden hier dynamisch toegevoegd -->
+            </ul>
+            <p id="cartTotal">Totaal: €0.00</p>
+            <button onclick="showCheckout()">Verder naar afrekenen</button>
+            <button onclick="showCatalog()">Terug naar catalogus</button>
+        </div>
+
+        <!-- Afrekenformulier -->
+        <div id="checkoutForm" style="display:none;">
+            <h3>Uw gegevens</h3>
+            <p>Vul uw gegevens in en plaats uw bestelling. De bestelling wordt naar ons verzonden via e-mail.</p>
+            <input type="text" id="customerName" placeholder="Naam" required><br>
+            <input type="email" id="customerEmail" placeholder="E-mail" required><br>
+            <input type="tel" id="customerPhone" placeholder="Telefoonnummer"><br>
+            <input type="text" id="customerAddress" placeholder="Adres"><br>
+            <textarea id="customerNotes" placeholder="Opmerkingen over de bestelling..." rows="4"></textarea><br>
+            <div class="payment-info">
+                <p>Vergeet niet een voorschot van 50% te betalen via de onderstaande link:</p>
+                <a href="https://revolut.me/alainthgq" target="_blank">revolut.me/alainthgq</a>
+            </div>
+            <button onclick="sendOrder()">Bestelling plaatsen</button>
+            <button onclick="showCart()">Terug naar winkelwagen</button>
+        </div>
+    </div>
+    
+    <!-- Modale venster voor berichten -->
+    <div id="messageModal">
+      <div class="modal-content">
+        <span class="close-button" onclick="hideMessage()">&times;</span>
+        <p id="messageText"></p>
+      </div>
+    </div>
+    
+    <script>
+        // Opslag voor de geladen data en sorteerstatus
+        let allData = [];
+        let currentSort = { index: -1, asc: true };
+        // Winkelwagen opslag: Een array van objecten, elk met een product en hoeveelheid
+        let cart = [];
+
+        // ===== Hulpfuncties =====
+        
+        /**
+         * Verwijdert het UTF-8 Byte Order Mark (BOM) indien aanwezig.
+         * @param {string} s De invoerstring.
+         * @returns {string} De string zonder BOM.
+         */
+        function stripBOM(s) { return s && s.charCodeAt(0) === 0xFEFF ? s.slice(1) : s; }
+
+        /**
+         * Detecteert het scheidingsteken van de CSV.
+         * @param {string} text De CSV-tekst.
+         * @returns {string} Het gedetecteerde scheidingsteken.
+         */
+        function detectDelimiter(text) {
+            const firstLine = (text.split(/\r?\n/).find(l => l.trim().length > 0) || "");
+            const counts = { ';': 0, ',': 0, '\t': 0, '|': 0 };
+            let inQuotes = false;
+            for (let i = 0; i < firstLine.length; i++) {
+                const ch = firstLine[i];
+                if (ch === '"') {
+                    if (inQuotes && firstLine[i + 1] === '"') { i++; continue; }
+                    inQuotes = !inQuotes; continue;
+                }
+                if (!inQuotes && counts.hasOwnProperty(ch)) counts[ch]++;
+            }
+            let best = ';', bestCount = -1;
+            for (const k in counts) {
+                if (counts[k] > bestCount) {
+                    best = k;
+                    bestCount = counts[k];
+                }
+            }
+            return bestCount <= 0 ? ';' : best;
+        }
+
+        /**
+         * Parseert CSV-tekst in een array van rijen.
+         * @param {string} text De CSV-tekst.
+         * @param {string} delimiter Het scheidingsteken.
+         * @returns {Array<Array<string>>} De geparseerde data.
+         */
+        function parseCSV(text, delimiter) {
+            const rows = [];
+            let row = [], field = '';
+            let inQuotes = false;
+            for (let i = 0; i < text.length; i++) {
+                const ch = text[i];
+                if (ch === '"') {
+                    if (inQuotes && text[i + 1] === '"') { field += '"'; i++; continue; }
+                    inQuotes = !inQuotes; continue;
+                }
+                if (!inQuotes && ch === delimiter) { row.push(field); field = ''; continue; }
+                if (!inQuotes && (ch === '\n' || ch === '\r' && text[i + 1] !== '\n')) {
+                    row.push(field); rows.push(row); row = []; field = ''; continue;
+                }
+                if (!inQuotes && ch === '\r') { continue; }
+                field += ch;
+            }
+            if (field.length || row.length) { row.push(field); rows.push(row); }
+            return rows.filter(r => r.some(cell => String(cell).trim().length > 0));
+        }
+
+        /**
+         * Normaliseert een string voor vergelijking.
+         * @param {string} s De invoerstring.
+         * @returns {string} De genormaliseerde string.
+         */
+        function normalizeKey(s) {
+            return String(s || '')
+                .toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/€/g, 'eur')
+                .replace(/[^a-z0-9#]+/g, '');
+        }
+
+        // Definities van de gewenste kolommen en hun mogelijke namen
+        const TARGETS = [
+            { label: 'Stock', keys: ['stock', 'voorraad'], loose: ['qty', 'quantity'] },
+            { label: 'Brand', keys: ['brand'] },
+            { label: 'Brand 2', keys: ['brand2', 'brand_2', 'subbrand', 'lijn', 'line'] },
+            { label: 'Brand 3', keys: ['brand3', 'brand_3', 'series', 'serie', 'subline'] },
+            { label: '€ Unit', keys: ['eurunit', 'unitprice', 'priceunit', 'prijsperstuk', 'prijsunit', 'uniteur', 'priceeur', 'eurpcs', 'eurperunit'], loose: ['perunit', 'unit'] },
+            { label: '# Box', keys: ['#box', 'qtybox', 'aantalperbox', 'aantalbox', 'unitsperbox', 'pcsperbox', 'perbox', 'nbox'] },
+            { label: '€ Box', keys: ['eurbox', 'boxprice', 'prijsbox', 'prijsperbox', 'boxeur', 'eurperbox'] },
+            { label: 'Size', keys: ['size', 'maat', 'afmeting', 'lengthring', 'format', 'vitola'] },
+            { label: 'Country', keys: ['country', 'land', 'origin', 'herkomst', 'origine'] }
+        ];
+
+        /**
+         * Bouwt een mapping van de CSV-headers naar de gewenste kolommen.
+         * @param {Array<string>} header De array met de ruwe headers.
+         * @returns {{mapping: Array<number>, norm: Array<string>}} Een object met de mapping en genormaliseerde headers.
+         */
+        function buildHeaderMapping(header) {
+            const norm = header.map(normalizeKey);
+            const used = new Set();
+            const mapping = new Array(TARGETS.length).fill(-1);
+
+            function findIndex(keys, allowLoose) {
+                for (let i = 0; i < norm.length; i++) {
+                    if (used.has(i)) continue;
+                    for (const k of keys) {
+                        if (norm[i] === k) {
+                            used.add(i);
+                            return i;
+                        }
+                    }
+                }
+                if (!allowLoose) return -1;
+                for (let i = 0; i < norm.length; i++) {
+                    if (used.has(i)) continue;
+                    for (const k of keys) {
+                        if (norm[i].includes(k)) {
+                            used.add(i);
+                            return i;
+                        }
+                    }
+                }
+                return -1;
+            }
+
+            TARGETS.forEach((t, idx) => {
+                let i = findIndex(t.keys, false);
+                if (i === -1 && t.loose) i = findIndex(t.loose, true);
+                mapping[idx] = i;
+            });
+
+            return { mapping, norm };
+        }
+
+        // ===== Modale vensterfuncties =====
+        
+        /**
+         * Toont een bericht in het modale venster.
+         * @param {string} message Het bericht om weer te geven.
+         */
+        function showMessage(message) {
+            document.getElementById("messageText").textContent = message;
+            document.getElementById("messageModal").style.display = "flex";
+        }
+
+        /**
+         * Verbergt het modale venster.
+         */
+        function hideMessage() {
+            document.getElementById("messageModal").style.display = "none";
+        }
+
+        // ===== Login check =====
+        function checkLogin() {
+            const user = document.getElementById("username").value.trim();
+            const pass = document.getElementById("password").value.trim();
+            if (user === "Philbo" && pass === "sigaren2025") {
+                document.getElementById("loginBox").style.display = "none";
+                document.getElementById("catalog").style.display = "block";
+                loadCSV();
+            } else {
+                document.getElementById("loginError").innerText = "Ongeldige login!";
+            }
+        }
+
+        // ===== CSV laden en data opslaan =====
+        function loadCSV() {
+            fetch("data.csv", { cache: 'no-cache' })
+                .then(response => {
+                    if (!response.ok) throw new Error('data.csv niet gevonden');
+                    return response.text();
+                })
+                .then(text => {
+                    text = stripBOM(text);
+                    const delim = detectDelimiter(text);
+                    const rows = parseCSV(text, delim);
+                    if (!rows.length) throw new Error('CSV is leeg');
+                    
+                    const header = rows[0];
+                    const { mapping } = buildHeaderMapping(header);
+                    const mappedCount = mapping.filter(i => i >= 0).length;
+                    const haveHeader = mappedCount >= 4;
+                    const dataRows = haveHeader ? rows.slice(1) : rows;
+
+                    // Opslaan van de data in het geheugen voor snelle filtering en sortering
+                    allData = dataRows.map((row, index) => {
+                        const newRow = { id: index }; // Voeg een unieke ID toe aan elke rij
+                        TARGETS.forEach((t, idx) => {
+                            const srcIdx = mapping[idx];
+                            newRow[t.label] = (srcIdx !== -1 && row[srcIdx] !== undefined) ? row[srcIdx] : '';
+                        });
+                        return newRow;
+                    });
+
+                    // Render de tabel voor de eerste keer
+                    renderTable(allData);
+                })
+                .catch(err => {
+                    showMessage('Fout bij laden: ' + err.message);
+                });
+        }
+
+        /**
+         * Rendert de tabel met de meegegeven data, inclusief de bestelknoppen.
+         * @param {Array<Object>} data De array met data-objecten.
+         */
+        function renderTable(data) {
+            const headerRow = document.getElementById("headerRow");
+            headerRow.innerHTML = '';
+            TARGETS.forEach((t) => {
+                const th = document.createElement("th");
+                th.textContent = t.label;
+                th.addEventListener("click", () => sortTable(t.label));
+                headerRow.appendChild(th);
+            });
+            // Voeg een header voor de bestelkolom toe
+            const orderHeader = document.createElement("th");
+            orderHeader.textContent = "Bestellen";
+            headerRow.appendChild(orderHeader);
+
+            const tbody = document.querySelector("#cigarTable tbody");
+            tbody.innerHTML = '';
+            if (data.length === 0) {
+                const tr = document.createElement("tr");
+                const td = document.createElement("td");
+                td.colSpan = TARGETS.length + 1; // +1 voor de nieuwe bestelkolom
+                td.textContent = "Geen resultaten gevonden.";
+                td.style.textAlign = "center";
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+            } else {
+                data.forEach(row => {
+                    const tr = document.createElement("tr");
+                    TARGETS.forEach((t) => {
+                        const td = document.createElement("td");
+                        td.textContent = row[t.label] || '';
+                        tr.appendChild(td);
+                    });
+
+                    // Voeg de bestelkolom toe
+                    const orderTd = document.createElement("td");
+                    const orderInput = document.createElement("input");
+                    orderInput.type = "number";
+                    orderInput.min = "1";
+                    orderInput.value = "1";
+                    orderInput.style.width = "50px";
+                    const addButton = document.createElement("button");
+                    addButton.textContent = "Voeg toe";
+                    // Gebruik de unieke ID om het juiste product te vinden
+                    addButton.onclick = () => addToCart(row.id, parseInt(orderInput.value));
+                    orderTd.appendChild(orderInput);
+                    orderTd.appendChild(addButton);
+                    tr.appendChild(orderTd);
+
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        // ===== Winkelwagen functionaliteit =====
+        /**
+         * Voegt een product toe aan de winkelwagen.
+         * @param {number} productId De ID van het product.
+         * @param {number} quantity De hoeveelheid die besteld moet worden.
+         */
+        function addToCart(productId, quantity) {
+            if (quantity <= 0) {
+                showMessage("Hoeveelheid moet groter zijn dan 0.");
+                return;
+            }
+
+            const existingItem = cart.find(item => item.id === productId);
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                const product = allData.find(item => item.id === productId);
+                cart.push({ ...product, quantity: quantity });
+            }
+            updateCartCount();
+            showMessage(`Product toegevoegd aan winkelwagen: ${quantity} x ${allData.find(item => item.id === productId)['Brand 2']}`);
+        }
+
+        /**
+         * Rendert de winkelwagenoverzicht.
+         */
+        function renderCart() {
+            const cartList = document.getElementById("cartItemsList");
+            const cartTotalEl = document.getElementById("cartTotal");
+            cartList.innerHTML = '';
+            let total = 0;
+
+            if (cart.length === 0) {
+                cartList.innerHTML = '<li>Uw winkelwagen is leeg.</li>';
+                cartTotalEl.textContent = 'Totaal: €0.00';
+                return;
+            }
+            
+            cart.forEach(item => {
+                const li = document.createElement("li");
+                const priceString = item['€ Unit'] || '0';
+                const unitPrice = parseFloat(priceString.replace(',', '.'));
+                const itemTotal = unitPrice * item.quantity;
+                total += itemTotal;
+
+                li.innerHTML = `
+                    <div>
+                        <span>${item.quantity} x ${item['Brand']} - ${item['Brand 2']}</span>
+                        <span>€${unitPrice.toFixed(2)}</span>
+                    </div>
+                    <div class="quantity-controls">
+                        <button onclick="updateQuantity(${item.id}, -1)">-</button>
+                        <span>${item.quantity}</span>
+                        <button onclick="updateQuantity(${item.id}, 1)">+</button>
+                        <button onclick="removeItem(${item.id})">Verwijder</button>
+                    </div>
+                `;
+                cartList.appendChild(li);
+            });
+            cartTotalEl.textContent = `Totaal: €${total.toFixed(2)}`;
+        }
+        
+        /**
+         * Update de hoeveelheid van een item in de winkelwagen.
+         * @param {number} productId De ID van het product.
+         * @param {number} change Het aantal om toe te voegen of te verwijderen.
+         */
+        function updateQuantity(productId, change) {
+            const item = cart.find(i => i.id === productId);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    removeItem(productId);
+                }
+            }
+            renderCart();
+            updateCartCount();
+        }
+
+        /**
+         * Verwijdert een item uit de winkelwagen.
+         * @param {number} productId De ID van het product.
+         */
+        function removeItem(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            renderCart();
+            updateCartCount();
+        }
+        
+        /**
+         * Update het aantal items in de winkelwagen-knop.
+         */
+        function updateCartCount() {
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById("cartItemCount").textContent = count;
+        }
+
+        // ===== Navigatie functionaliteit =====
+        function showCatalog() {
+            document.getElementById("catalog").style.display = "block";
+            document.getElementById("cartSummary").style.display = "none";
+            document.getElementById("checkoutForm").style.display = "none";
+        }
+
+        function showCart() {
+            document.getElementById("catalog").style.display = "none";
+            document.getElementById("cartSummary").style.display = "block";
+            document.getElementById("checkoutForm").style.display = "none";
+            renderCart();
+        }
+
+        function showCheckout() {
+            if (cart.length === 0) {
+                showMessage("Uw winkelwagen is leeg. Voeg eerst producten toe.");
+                return;
+            }
+            document.getElementById("catalog").style.display = "none";
+            document.getElementById("cartSummary").style.display = "none";
+            document.getElementById("checkoutForm").style.display = "block";
+        }
+
+        // ===== Bestelling verzenden =====
+        function sendOrder() {
+            const name = document.getElementById("customerName").value;
+            const email = document.getElementById("customerEmail").value;
+            const phone = document.getElementById("customerPhone").value;
+            const address = document.getElementById("customerAddress").value;
+            const notes = document.getElementById("customerNotes").value;
+
+            if (!name || !email) {
+                showMessage("Naam en e-mail zijn verplichte velden.");
+                return;
+            }
+
+            let orderDetails = "Bestelling van " + name + "\n\n";
+            orderDetails += "Contactgegevens:\n";
+            orderDetails += "Naam: " + name + "\n";
+            orderDetails += "E-mail: " + email + "\n";
+            if (phone) orderDetails += "Telefoon: " + phone + "\n";
+            if (address) orderDetails += "Adres: " + address + "\n";
+            if (notes) orderDetails += "\nOpmerkingen:\n" + notes + "\n";
+            orderDetails += "\nBestelde producten:\n";
+
+            let total = 0;
+            cart.forEach(item => {
+                const priceString = item['€ Unit'] || '0';
+                const unitPrice = parseFloat(priceString.replace(',', '.'));
+                const itemTotal = unitPrice * item.quantity;
+                total += itemTotal;
+                orderDetails += `- ${item.quantity} x ${item['Brand']} - ${item['Brand 2']} (${item.Size}) - €${unitPrice.toFixed(2)} per stuk\n`;
+            });
+            orderDetails += `\nTotaal te betalen: €${total.toFixed(2)}`;
+
+            const subject = encodeURIComponent("Bestelling van " + name);
+            const body = encodeURIComponent(orderDetails);
+
+            // Gebruik mailto: om de bestelling via e-mail te verzenden
+            window.location.href = `mailto:philbo@example.com?subject=${subject}&body=${body}`;
+
+            // Reset de winkelwagen na het verzenden
+            cart = [];
+            updateCartCount();
+            showMessage("Uw bestelling is verzonden! U kunt een e-mailclientvenster verwachten.");
+            showCatalog();
+        }
+
+        // ===== Zoekfunctie =====
+        function filterTable() {
+            const search = document.getElementById("searchBox").value.toLowerCase();
+            const filteredData = allData.filter(row => {
+                return Object.values(row).some(cell => {
+                    return String(cell).toLowerCase().includes(search);
+                });
+            });
+            renderTable(filteredData);
+        }
+
+        // ===== Sorteren =====
+        function sortTable(key) {
+            const isAsc = currentSort.key !== key || !currentSort.asc;
+            currentSort = { key, asc: isAsc };
+            
+            // Sorteer de allData array
+            allData.sort((a, b) => {
+                const A = String(a[key] || '').trim();
+                const B = String(b[key] || '').trim();
+                
+                const numA = parseFloat(A.replace(/[^0-9.,-]/g, "").replace(",", "."));
+                const numB = parseFloat(B.replace(/[^0-9.,-]/g, "").replace(",", "."));
+                
+                let result = 0;
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    result = numA - numB;
+                } else {
+                    result = A.localeCompare(B, 'nl', { sensitivity: 'base' });
+                }
+                
+                return isAsc ? result : -result;
+            });
+            
+            // Render de gesorteerde data
+            renderTable(allData);
+            
+            // Update de headerklasse voor visuele indicatie
+            const headers = document.querySelectorAll("#headerRow th");
+            headers.forEach(h => {
+                h.classList.remove("sort-asc", "sort-desc");
+                if (h.textContent === key) {
+                    h.classList.add(isAsc ? "sort-asc" : "sort-desc");
+                }
+            });
+        }
+
+        // ===== Beperk kopiëren/printen =====
+        document.addEventListener("keydown", function(e) {
+            const k = e.key.toLowerCase();
+            if (e.key === "PrintScreen" || (e.ctrlKey && (k === "c" || k === "p" || k === "s")) || (e.metaKey && (k === "c" || k === "p" || k === "s"))) {
+                e.preventDefault();
+                showMessage("Kopiëren/printen/opslaan is geblokkeerd!");
+            }
+        });
+    </script>
+</body>
+</html>
