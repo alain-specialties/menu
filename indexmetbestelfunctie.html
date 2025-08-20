@@ -259,7 +259,7 @@
             <h3>Your Details</h3>
             <!-- New pickup notice added here -->
             <div class="pickup-notice">
-                <p>Alle bestelde goederen moeten afgehaald worden. Deze mogen bij wet niet verstuurd worden.</p>
+                <p>All orders must be picked up. It is forbidden by law to ship them.</p>
             </div>
             <p>Please enter your details and place your order. The order will be sent to us via email.</p>
             <input type="text" id="customerName" placeholder="Name" required><br>
@@ -736,8 +736,12 @@
             
             // Add the amounts to the email body
             orderDetails += `\nTotal order amount: €${total.toFixed(2)}`;
-            orderDetails += `\nDeposit paid: €${deposit.toFixed(2)}`;
-            orderDetails += `\nRemaining amount to pay: €${remaining.toFixed(2)}`;
+            // START OF CHANGE: Updated text to "Deposit to pay" as requested by user
+            orderDetails += `\nDeposit to pay: €${deposit.toFixed(2)}`;
+            // END OF CHANGE
+            // START OF CHANGE: Updated text to "Expected amount still to pay (according to price on tax stamp)" as requested by user
+            orderDetails += `\nExpected amount still to pay (according to price on tax stamp): €${remaining.toFixed(2)}`;
+            // END OF CHANGE
 
             const subject = encodeURIComponent("Philbo Data Viewer Order - Order from " + name);
             const body = encodeURIComponent(orderDetails);
