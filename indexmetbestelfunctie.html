@@ -189,6 +189,19 @@
         #checkoutForm .payment-info a:hover {
             color: #ffcc00;
         }
+        
+        /* New style for the pickup notice */
+        .pickup-notice {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #ffcc00;
+            margin-bottom: 20px;
+            border: 2px solid #ffcc00;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #333;
+        }
 
         /* FIX: Custom style for the 'Size' column to prevent text wrapping.
            This ensures the content of the 8th column stays on a single line. */
@@ -244,6 +257,10 @@
         <!-- Checkout form -->
         <div id="checkoutForm" style="display:none;">
             <h3>Your Details</h3>
+            <!-- New pickup notice added here -->
+            <div class="pickup-notice">
+                <p>Alle bestelde goederen moeten afgehaald worden. Deze mogen bij wet niet verstuurd worden.</p>
+            </div>
             <p>Please enter your details and place your order. The order will be sent to us via email.</p>
             <input type="text" id="customerName" placeholder="Name" required><br>
             <input type="email" id="customerEmail" placeholder="Email" required><br>
@@ -547,7 +564,7 @@
          */
         function addToCart(productId, quantity) {
             if (quantity <= 0 || isNaN(quantity)) {
-                showMessage("Box quantity must be greater than 0.", 3000);
+                showMessage("Box quantity must be greater than 0.", 2000); // 2 seconds for this message
                 return;
             }
 
@@ -559,7 +576,11 @@
                 cart.push({ ...product, quantity: quantity });
             }
             updateCartCount();
-            showMessage(`Product added to cart: ${quantity} x ${allData.find(item => item.id === productId)['Brand 2']}`);
+            
+            // Generate the message with full product details
+            const product = allData.find(item => item.id === productId);
+            const message = `Product added to cart: ${quantity} x box of ${product['Brand']} - ${product['Brand 2']} - ${product['Brand 3']} (${product.Size})`;
+            showMessage(message, 2000); // 2 seconds for this message
         }
 
         /**
@@ -652,7 +673,7 @@
 
         function showCheckout() {
             if (cart.length === 0) {
-                showMessage("Your cart is empty. Please add products first.", 3000);
+                showMessage("Your cart is empty. Please add products first.", 2000); // 2 seconds for this message
                 return;
             }
 
@@ -685,7 +706,7 @@
             const notes = document.getElementById("customerNotes").value;
 
             if (!name || !email) {
-                showMessage("Name and email are required fields.", 3000);
+                showMessage("Name and email are required fields.", 2000); // 2 seconds for this message
                 return;
             }
 
