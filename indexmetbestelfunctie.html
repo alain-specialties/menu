@@ -1,806 +1,793 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Philbo Data Viewer</title>
-    <style>
-        /* Base styles adopted from the original code */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #111;
-            color: #c0a16b;
-            padding: 20px;
-            user-select: none;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-        }
-        .container {
-            width: 90%;
-            max-width: 1200px;
-        }
-        h1, h2 {
-            text-align: center;
-            color: #c0a16b;
-        }
-        #loginBox, #orderBox, #cartSummary, #checkoutForm, #orderConfirmation {
-            text-align: center;
-            margin-top: 100px;
-            padding: 20px;
-            border-radius: 10px;
-            background-color: #222;
-        }
-        input, select {
-            padding: 8px;
-            margin: 5px;
-            border-radius: 5px;
-            border: 1px solid #555;
-            background-color: #333;
-            color: #c0a16b;
-        }
-        button, .cart-button {
-            padding: 8px 16px;
-            margin: 5px;
-            border-radius: 5px;
-            background-color: #555;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover, .cart-button:hover {
-            background-color: #777;
-        }
-        #loginError, #messageBox {
-            color: red;
-            font-weight: bold;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            cursor: default;
-        }
-        th, td {
-            border: 1px solid #555;
-            padding: 8px;
-            text-align: left;
-            color: #c0a16b;
-        }
-        th {
-            background-color: #333;
-            cursor: pointer;
-        }
-        tr:nth-child(even) {
-            background-color: #222;
-        }
-        #searchBox {
-            margin: 10px 0;
-            padding: 8px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        th.sort-asc::after {
-            content: " \25B2";
-        }
-        th.sort-desc::after {
-            content: " \25BC";
-        }
-        #legend, #disclaimer {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #c0a16b;
-        }
-        #disclaimer {
-            font-style: italic;
-        }
-        
-        /* New modal styles for error messages and notifications */
-        #messageModal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.4);
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background-color: #333;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 400px;
-            text-align: center;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        }
-        .close-button {
-            color: #c0a16b;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-        .close-button:hover,
-        .close-button:focus {
-            color: #fff;
-            text-decoration: none;
-            cursor: pointer;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Philbo Data Viewer</title>
+    <style>
+        /* Base styles adopted from the original code */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111;
+            color: #c0a16b;
+            padding: 20px;
+            user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .container {
+            width: 90%;
+            max-width: 1200px;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #c0a16b;
+        }
+        #loginBox, #orderBox, #cartSummary, #checkoutForm, #orderConfirmation {
+            text-align: center;
+            margin-top: 100px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #222;
+        }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: #c0a16b;
+        }
+        button, .cart-button {
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 5px;
+            background-color: #555;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover, .cart-button:hover {
+            background-color: #777;
+        }
+        #loginError, #messageBox {
+            color: red;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            cursor: default;
+        }
+        th, td {
+            border: 1px solid #555;
+            padding: 8px;
+            text-align: left;
+            color: #c0a16b;
+        }
+        th {
+            background-color: #333;
+            cursor: pointer;
+        }
+        tr:nth-child(even) {
+            background-color: #222;
+        }
+        #searchBox {
+            margin: 10px 0;
+            padding: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        th.sort-asc::after {
+            content: " \25B2";
+        }
+        th.sort-desc::after {
+            content: " \25BC";
+        }
+        #legend, #disclaimer {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #c0a16b;
+        }
+        #disclaimer {
+            font-style: italic;
+        }
+        
+        /* New modal styles for error messages and notifications */
+        #messageModal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #333;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .close-button {
+            color: #c0a16b;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
 
-        /* Cart section styles */
-        #cartSummary {
-            margin-top: 20px;
-            text-align: left;
-            padding: 15px;
-            display: none; /* Hidden by default */
-        }
-        #cartSummary h3 {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        #cartItemsList {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-        #cartItemsList li {
-            border-bottom: 1px solid #444;
-            padding: 8px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .quantity-controls button {
-            padding: 2px 8px;
-        }
-        #cartTotal {
-            font-weight: bold;
-            text-align: right;
-            margin-top: 10px;
-        }
+        /* Cart section styles */
+        #cartSummary {
+            margin-top: 20px;
+            text-align: left;
+            padding: 15px;
+            display: none; /* Hidden by default */
+        }
+        #cartSummary h3 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        #cartItemsList {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        #cartItemsList li {
+            border-bottom: 1px solid #444;
+            padding: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .quantity-controls button {
+            padding: 2px 8px;
+        }
+        #cartTotal {
+            font-weight: bold;
+            text-align: right;
+            margin-top: 10px;
+        }
 
-        /* Checkout form styles */
-        #checkoutForm {
-            margin-top: 20px;
-            text-align: left;
-            display: none; /* Hidden by default */
-        }
-        #checkoutForm input, #checkoutForm textarea {
-            width: calc(100% - 10px);
-            margin-bottom: 10px;
-        }
-        #checkoutForm .payment-info {
-            background-color: #333;
-            padding: 15px;
-            border-radius: 5px;
-            text-align: center;
-            margin-top: 15px;
-        }
-        #checkoutForm .payment-info a {
-            color: #e6b800;
-            text-decoration: underline;
-        }
-        #checkoutForm .payment-info a:hover {
-            color: #ffcc00;
-        }
+        /* Checkout form styles */
+        #checkoutForm {
+            margin-top: 20px;
+            text-align: left;
+            display: none; /* Hidden by default */
+        }
+        #checkoutForm input, #checkoutForm textarea {
+            width: calc(100% - 10px);
+            margin-bottom: 10px;
+        }
+        #checkoutForm .payment-info {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin-top: 15px;
+        }
+        #checkoutForm .payment-info a {
+            color: #e6b800;
+            text-decoration: underline;
+        }
+        #checkoutForm .payment-info a:hover {
+            color: #ffcc00;
+        }
 
-        /* FIX: Custom style for the 'Size' column to prevent text wrapping.
-           This ensures the content of the 8th column stays on a single line. */
-        #cigarTable th:nth-child(7),
-        #cigarTable td:nth-child(7) {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        /* New flexbox style for the order button and input field */
-        .order-controls {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-    </style>
+        /* FIX: Custom style for the 'Size' column to prevent text wrapping.
+           This ensures the content of the 8th column stays on a single line. */
+        #cigarTable th:nth-child(7),
+        #cigarTable td:nth-child(7) {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* New flexbox style for the order button and input field */
+        .order-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
 </head>
 <body oncontextmenu="return false;">
-    <div class="container">
-        <h1>Philbo Data Viewer</h1>
-        <div id="loginBox">
-            <h2>Login</h2>
-            <input type="text" id="username" placeholder="Username"><br>
-            <input type="password" id="password" placeholder="Password"><br>
-            <button onclick="checkLogin()">Login</button>
-            <p id="loginError" style="color:red;"></p>
-        </div>
-        <div id="catalog" style="display:none;">
-            <input type="text" id="searchBox" placeholder="Search..." onkeyup="filterTable()">
-            <div id="legend">Legend: V = In stock &nbsp; O = Pre-order by BOX if available</div>
-            <div id="disclaimer">Prices are indicative and subject to change. The final price is determined by the tax stamp at the time of delivery.</div>
-            <button class="cart-button" onclick="showCart()">🛒 Cart (<span id="cartItemCount">0</span>)</button>
-            <table id="cigarTable">
-                <thead>
-                    <tr id="headerRow"></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-        
-                <div id="cartSummary" style="display:none;">
-            <h3>Your Order</h3>
-            <ul id="cartItemsList">
-                            </ul>
-            <p id="cartTotal">Total: €0.00</p>
-            <button onclick="showCheckout()">Proceed to Checkout</button>
-            <button onclick="showCatalog()">Back to Catalog</button>
-        </div>
+    <div class="container">
+        <h1>Philbo Data Viewer</h1>
+        <div id="loginBox">
+            <h2>Login</h2>
+            <input type="text" id="username" placeholder="Username"><br>
+            <input type="password" id="password" placeholder="Password"><br>
+            <button onclick="checkLogin()">Login</button>
+            <p id="loginError" style="color:red;"></p>
+        </div>
+        <div id="catalog" style="display:none;">
+            <input type="text" id="searchBox" placeholder="Search..." onkeyup="filterTable()">
+            <div id="legend">Legend: V = In stock &nbsp; O = Pre-order by BOX if available</div>
+            <div id="disclaimer">Prices are indicative and subject to change. The final price is determined by the tax stamp at the time of delivery.</div>
+            <button class="cart-button" onclick="showCart()">🛒 Cart (<span id="cartItemCount">0</span>)</button>
+            <table id="cigarTable">
+                <thead>
+                    <tr id="headerRow"></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        
+        <!-- Cart summary -->
+        <div id="cartSummary" style="display:none;">
+            <h3>Your Order</h3>
+            <ul id="cartItemsList">
+                <!-- Cart items are dynamically added here -->
+            </ul>
+            <p id="cartTotal">Total: €0.00</p>
+            <button onclick="showCheckout()">Proceed to Checkout</button>
+            <button onclick="showCatalog()">Back to Catalog</button>
+        </div>
 
-                <div id="checkoutForm" style="display:none;">
-            <h3>Your Details</h3>
-            <p>Please enter your details and place your order. The order will be sent to us via email.</p>
-            <input type="text" id="customerName" placeholder="Name" required><br>
-            <input type="email" id="customerEmail" placeholder="Email" required><br>
-            <input type="tel" id="customerPhone" placeholder="Phone Number"><br>
-            <input type="text" id="customerAddress" placeholder="Address"><br>
-            <textarea id="customerNotes" placeholder="Order notes..." rows="4"></textarea><br>
-            <div class="payment-info">
-                <p>Don't forget to pay a 50% deposit via the link below.</p>
-                <p id="depositAmount">The deposit amount is: €0.00</p>
-                <a href="https://revolut.me/alainthgq" target="_blank">revolut.me/alainthgq</a>
-            </div>
-            <button onclick="sendOrder()">Place Order</button>
-            <button onclick="showCart()">Back to Cart</button>
-        </div>
-    </div>
-    
-        <div id="messageModal">
-      <div class="modal-content">
-        <span class="close-button" onclick="hideMessage()">&times;</span>
-        <p id="messageText"></p>
-      </div>
-    </div>
-    
-    <script>
-        // Storage for loaded data and sorting status
-        let allData = [];
-        let currentSort = { index: -1, asc: true };
-        // Cart storage: An array of objects, each with a product and quantity
-        let cart = [];
-        let messageTimeoutId = null;
+        <!-- Checkout form -->
+        <div id="checkoutForm" style="display:none;">
+            <h3>Your Details</h3>
+            <p>Please enter your details and place your order. The order will be sent to us via email.</p>
+            <input type="text" id="customerName" placeholder="Name" required><br>
+            <input type="email" id="customerEmail" placeholder="Email" required><br>
+            <input type="tel" id="customerPhone" placeholder="Phone Number"><br>
+            <input type="text" id="customerAddress" placeholder="Address"><br>
+            <textarea id="customerNotes" placeholder="Order notes..." rows="4"></textarea><br>
+            <div class="payment-info">
+                <p>Don't forget to pay a 50% deposit via the link below.</p>
+                <p id="depositAmount">The deposit amount is: €0.00</p>
+                <a href="https://revolut.me/alainthgq" target="_blank">revolut.me/alainthgq</a>
+            </div>
+            <button onclick="sendOrder()">Place Order</button>
+            <button onclick="showCart()">Back to Cart</button>
+        </div>
+    </div>
+    
+    <!-- Modal window for messages -->
+    <div id="messageModal">
+      <div class="modal-content">
+        <span class="close-button" onclick="hideMessage()">&times;</span>
+        <p id="messageText"></p>
+      </div>
+    </div>
+    
+    <script>
+        // Storage for loaded data and sorting status
+        let allData = [];
+        let currentSort = { index: -1, asc: true };
+        // Cart storage: An array of objects, each with a product and quantity
+        let cart = [];
 
-        // ===== Helper Functions =====
-        
-        /**
-         * Removes the UTF-8 Byte Order Mark (BOM) if present.
-         * @param {string} s The input string.
-         * @returns {string} The string without the BOM.
-         */
-        function stripBOM(s) { return s && s.charCodeAt(0) === 0xFEFF ? s.slice(1) : s; }
+        // ===== Helper Functions =====
+        
+        /**
+         * Removes the UTF-8 Byte Order Mark (BOM) if present.
+         * @param {string} s The input string.
+         * @returns {string} The string without the BOM.
+         */
+        function stripBOM(s) { return s && s.charCodeAt(0) === 0xFEFF ? s.slice(1) : s; }
 
-        /**
-         * Detects the CSV delimiter.
-         * @param {string} text The CSV text.
-         * @returns {string} The detected delimiter.
-         */
-        function detectDelimiter(text) {
-            const firstLine = (text.split(/\r?\n/).find(l => l.trim().length > 0) || "");
-            const counts = { ';': 0, ',': 0, '\t': 0, '|': 0 };
-            let inQuotes = false;
-            for (let i = 0; i < firstLine.length; i++) {
-                const ch = firstLine[i];
-                if (ch === '"') {
-                    if (inQuotes && firstLine[i + 1] === '"') { i++; continue; }
-                    inQuotes = !inQuotes; continue;
-                }
-                if (!inQuotes && counts.hasOwnProperty(ch)) counts[ch]++;
-            }
-            let best = ';', bestCount = -1;
-            for (const k in counts) {
-                if (counts[k] > bestCount) {
-                    best = k;
-                    bestCount = counts[k];
-                }
-            }
-            return bestCount <= 0 ? ';' : best;
-        }
+        /**
+         * Detects the CSV delimiter.
+         * @param {string} text The CSV text.
+         * @returns {string} The detected delimiter.
+         */
+        function detectDelimiter(text) {
+            const firstLine = (text.split(/\r?\n/).find(l => l.trim().length > 0) || "");
+            const counts = { ';': 0, ',': 0, '\t': 0, '|': 0 };
+            let inQuotes = false;
+            for (let i = 0; i < firstLine.length; i++) {
+                const ch = firstLine[i];
+                if (ch === '"') {
+                    if (inQuotes && firstLine[i + 1] === '"') { i++; continue; }
+                    inQuotes = !inQuotes; continue;
+                }
+                if (!inQuotes && counts.hasOwnProperty(ch)) counts[ch]++;
+            }
+            let best = ';', bestCount = -1;
+            for (const k in counts) {
+                if (counts[k] > bestCount) {
+                    best = k;
+                    bestCount = counts[k];
+                }
+            }
+            return bestCount <= 0 ? ';' : best;
+        }
 
-        /**
-         * Parses CSV text into an array of rows.
-         * @param {string} text The CSV text.
-         * @param {string} delimiter The delimiter.
-         * @returns {Array<Array<string>>} The parsed data.
-         */
-        function parseCSV(text, delimiter) {
-            const rows = [];
-            let row = [], field = '';
-            let inQuotes = false;
-            for (let i = 0; i < text.length; i++) {
-                const ch = text[i];
-                if (ch === '"') {
-                    if (inQuotes && text[i + 1] === '"') { field += '"'; i++; continue; }
-                    inQuotes = !inQuotes; continue;
-                }
-                if (!inQuotes && ch === delimiter) { row.push(field); field = ''; continue; }
-                if (!inQuotes && (ch === '\n' || ch === '\r' && text[i + 1] !== '\n')) {
-                    row.push(field); rows.push(row); row = []; field = ''; continue;
-                }
-                if (!inQuotes && ch === '\r') { continue; }
-                field += ch;
-            }
-            if (field.length || row.length) { row.push(field); rows.push(row); }
-            return rows.filter(r => r.some(cell => String(cell).trim().length > 0));
-        }
+        /**
+         * Parses CSV text into an array of rows.
+         * @param {string} text The CSV text.
+         * @param {string} delimiter The delimiter.
+         * @returns {Array<Array<string>>} The parsed data.
+         */
+        function parseCSV(text, delimiter) {
+            const rows = [];
+            let row = [], field = '';
+            let inQuotes = false;
+            for (let i = 0; i < text.length; i++) {
+                const ch = text[i];
+                if (ch === '"') {
+                    if (inQuotes && text[i + 1] === '"') { field += '"'; i++; continue; }
+                    inQuotes = !inQuotes; continue;
+                }
+                if (!inQuotes && ch === delimiter) { row.push(field); field = ''; continue; }
+                if (!inQuotes && (ch === '\n' || ch === '\r' && text[i + 1] !== '\n')) {
+                    row.push(field); rows.push(row); row = []; field = ''; continue;
+                }
+                if (!inQuotes && ch === '\r') { continue; }
+                field += ch;
+            }
+            if (field.length || row.length) { row.push(field); rows.push(row); }
+            return rows.filter(r => r.some(cell => String(cell).trim().length > 0));
+        }
 
-        /**
-         * Normalizes a string for comparison.
-         * @param {string} s The input string.
-         * @returns {string} The normalized string.
-         */
-        function normalizeKey(s) {
-            return String(s || '')
-                .toLowerCase()
-                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                .replace(/€/g, 'eur')
-                .replace(/[^a-z0-9#]+/g, '');
-        }
+        /**
+         * Normalizes a string for comparison.
+         * @param {string} s The input string.
+         * @returns {string} The normalized string.
+         */
+        function normalizeKey(s) {
+            return String(s || '')
+                .toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/€/g, 'eur')
+                .replace(/[^a-z0-9#]+/g, '');
+        }
 
-        // Definitions of the desired columns and their possible names
-        const TARGETS = [
-            { label: 'Stock', keys: ['stock', 'voorraad'], loose: ['qty', 'quantity'] },
-            { label: 'Brand', keys: ['brand'] },
-            { label: 'Brand 2', keys: ['brand2', 'brand_2', 'subbrand', 'lijn', 'line'] },
-            { label: 'Brand 3', keys: ['brand3', 'brand_3', 'series', 'serie', 'subline'] },
-            { label: '# Box', keys: ['#box', 'qtybox', 'aantalperbox', 'aantalbox', 'unitsperbox', 'pcsperbox', 'perbox', 'nbox'] },
-            { label: '€ Box', keys: ['eurbox', 'boxprice', 'prijsbox', 'prijsperbox', 'boxeur', 'eurperbox'] },
-            { label: 'Size', keys: ['size', 'maat', 'afmeting', 'lengthring', 'format', 'vitola'] },
-            { label: 'Country', keys: ['country', 'land', 'origin', 'herkomst', 'origine'] }
-        ];
+        // Definitions of the desired columns and their possible names
+        const TARGETS = [
+            { label: 'Stock', keys: ['stock', 'voorraad'], loose: ['qty', 'quantity'] },
+            { label: 'Brand', keys: ['brand'] },
+            { label: 'Brand 2', keys: ['brand2', 'brand_2', 'subbrand', 'lijn', 'line'] },
+            { label: 'Brand 3', keys: ['brand3', 'brand_3', 'series', 'serie', 'subline'] },
+            { label: '# Box', keys: ['#box', 'qtybox', 'aantalperbox', 'aantalbox', 'unitsperbox', 'pcsperbox', 'perbox', 'nbox'] },
+            { label: '€ Box', keys: ['eurbox', 'boxprice', 'prijsbox', 'prijsperbox', 'boxeur', 'eurperbox'] },
+            { label: 'Size', keys: ['size', 'maat', 'afmeting', 'lengthring', 'format', 'vitola'] },
+            { label: 'Country', keys: ['country', 'land', 'origin', 'herkomst', 'origine'] }
+        ];
 
-        /**
-         * Builds a mapping from the CSV headers to the desired columns.
-         * @param {Array<string>} header The array with the raw headers.
-         * @returns {{mapping: Array<number>, norm: Array<string>}} An object with the mapping and normalized headers.
-         */
-        function buildHeaderMapping(header) {
-            const norm = header.map(normalizeKey);
-            const used = new Set();
-            const mapping = new Array(TARGETS.length).fill(-1);
+        /**
+         * Builds a mapping from the CSV headers to the desired columns.
+         * @param {Array<string>} header The array with the raw headers.
+         * @returns {{mapping: Array<number>, norm: Array<string>}} An object with the mapping and normalized headers.
+         */
+        function buildHeaderMapping(header) {
+            const norm = header.map(normalizeKey);
+            const used = new Set();
+            const mapping = new Array(TARGETS.length).fill(-1);
 
-            function findIndex(keys, allowLoose) {
-                for (let i = 0; i < norm.length; i++) {
-                    if (used.has(i)) continue;
-                    for (const k of keys) {
-                        if (norm[i] === k) {
-                            used.add(i);
-                            return i;
-                        }
-                    }
-                }
-                if (!allowLoose) return -1;
-                for (let i = 0; i < norm.length; i++) {
-                    if (used.has(i)) continue;
-                    for (const k of keys) {
-                        if (norm[i].includes(k)) {
-                            used.add(i);
-                            return i;
-                        }
-                    }
-                }
-                return -1;
-            }
-
-            TARGETS.forEach((t, idx) => {
-                let i = findIndex(t.keys, false);
-                if (i === -1 && t.loose) i = findIndex(t.loose, true);
-                mapping[idx] = i;
-            });
-
-            return { mapping, norm };
-        }
-
-        // ===== Modal window functions =====
-        
-        /**
-         * Shows a message in the modal window. Disappears after a set time.
-         * @param {string} message The message to display.
-         * @param {number} duration The duration in milliseconds. Use 0 for permanent. Default is 3000ms.
-         */
-        function showMessage(message, duration = 3000) {
-            // Clear any existing timeout
-            if (messageTimeoutId) {
-                clearTimeout(messageTimeoutId);
+            function findIndex(keys, allowLoose) {
+                for (let i = 0; i < norm.length; i++) {
+                    if (used.has(i)) continue;
+                    for (const k of keys) {
+                        if (norm[i] === k) {
+                            used.add(i);
+                            return i;
+                        }
+                    }
+                }
+                if (!allowLoose) return -1;
+                for (let i = 0; i < norm.length; i++) {
+                    if (used.has(i)) continue;
+                    for (const k of keys) {
+                        if (norm[i].includes(k)) {
+                            used.add(i);
+                            return i;
+                        }
+                    }
+                }
+                return -1;
             }
 
-            document.getElementById("messageText").textContent = message;
-            document.getElementById("messageModal").style.display = "flex";
+            TARGETS.forEach((t, idx) => {
+                let i = findIndex(t.keys, false);
+                if (i === -1 && t.loose) i = findIndex(t.loose, true);
+                mapping[idx] = i;
+            });
 
-            if (duration > 0) {
-                messageTimeoutId = setTimeout(() => {
-                    hideMessage();
-                }, duration);
-            }
-        }
+            return { mapping, norm };
+        }
 
-        /**
-         * Hides the modal window.
-         */
-        function hideMessage() {
-            if (messageTimeoutId) {
-                clearTimeout(messageTimeoutId);
-                messageTimeoutId = null;
+        // ===== Modal window functions =====
+        
+        /**
+         * Shows a message in the modal window. Disappears after a set time.
+         * @param {string} message The message to display.
+         * @param {number} duration The duration in milliseconds. Default is 3000ms.
+         */
+        function showMessage(message, duration = 3000) {
+            document.getElementById("messageText").textContent = message;
+            document.getElementById("messageModal").style.display = "flex";
+
+            if (duration > 0) {
+                setTimeout(() => {
+                    hideMessage();
+                }, duration);
             }
-            document.getElementById("messageModal").style.display = "none";
-        }
+        }
 
-        // ===== Login check =====
-        function checkLogin() {
-            const user = document.getElementById("username").value.trim();
-            const pass = document.getElementById("password").value.trim();
-            if (user === "Philbo" && pass === "sigaren2025") {
-                document.getElementById("loginBox").style.display = "none";
-                document.getElementById("catalog").style.display = "block";
-                loadCSV();
-            } else {
-                document.getElementById("loginError").innerText = "Invalid login!";
-            }
-        }
+        /**
+         * Hides the modal window.
+         */
+        function hideMessage() {
+            document.getElementById("messageModal").style.display = "none";
+        }
 
-        // ===== Load CSV and store data =====
-        function loadCSV() {
-            fetch("data.csv", { cache: 'no-cache' })
-                .then(response => {
-                    if (!response.ok) throw new Error('data.csv not found');
-                    return response.text();
-                })
-                .then(text => {
-                    text = stripBOM(text);
-                    const delim = detectDelimiter(text);
-                    const rows = parseCSV(text, delim);
-                    if (!rows.length) throw new Error('CSV is empty');
-                    
-                    const header = rows[0];
-                    const { mapping } = buildHeaderMapping(header);
-                    const mappedCount = mapping.filter(i => i >= 0).length;
-                    const haveHeader = mappedCount >= 4;
-                    const dataRows = haveHeader ? rows.slice(1) : rows;
+        // ===== Login check =====
+        function checkLogin() {
+            const user = document.getElementById("username").value.trim();
+            const pass = document.getElementById("password").value.trim();
+            if (user === "Philbo" && pass === "sigaren2025") {
+                document.getElementById("loginBox").style.display = "none";
+                document.getElementById("catalog").style.display = "block";
+                loadCSV();
+            } else {
+                document.getElementById("loginError").innerText = "Invalid login!";
+            }
+        }
 
-                    // Store data in memory for quick filtering and sorting
-                    allData = dataRows.map((row, index) => {
-                        const newRow = { id: index }; // Add a unique ID to each row
-                        TARGETS.forEach((t, idx) => {
-                            const srcIdx = mapping[idx];
-                            newRow[t.label] = (srcIdx !== -1 && row[srcIdx] !== undefined) ? row[srcIdx] : '';
-                        });
-                        return newRow;
-                    });
+        // ===== Load CSV and store data =====
+        function loadCSV() {
+            fetch("data.csv", { cache: 'no-cache' })
+                .then(response => {
+                    if (!response.ok) throw new Error('data.csv not found');
+                    return response.text();
+                })
+                .then(text => {
+                    text = stripBOM(text);
+                    const delim = detectDelimiter(text);
+                    const rows = parseCSV(text, delim);
+                    if (!rows.length) throw new Error('CSV is empty');
+                    
+                    const header = rows[0];
+                    const { mapping } = buildHeaderMapping(header);
+                    const mappedCount = mapping.filter(i => i >= 0).length;
+                    const haveHeader = mappedCount >= 4;
+                    const dataRows = haveHeader ? rows.slice(1) : rows;
 
-                    // Render the table for the first time
-                    renderTable(allData);
-                })
-                .catch(err => {
-                    showMessage('Loading error: ' + err.message, 0); // Show this message permanently
-                });
-        }
+                    // Store data in memory for quick filtering and sorting
+                    allData = dataRows.map((row, index) => {
+                        const newRow = { id: index }; // Add a unique ID to each row
+                        TARGETS.forEach((t, idx) => {
+                            const srcIdx = mapping[idx];
+                            newRow[t.label] = (srcIdx !== -1 && row[srcIdx] !== undefined) ? row[srcIdx] : '';
+                        });
+                        return newRow;
+                    });
 
-        /**
-         * Renders the table with the provided data, including order buttons.
-         * @param {Array<Object>} data The array of data objects.
-         */
-        function renderTable(data) {
-            const headerRow = document.getElementById("headerRow");
-            headerRow.innerHTML = '';
-            TARGETS.forEach((t) => {
-                const th = document.createElement("th");
-                th.textContent = t.label;
-                th.addEventListener("click", () => sortTable(t.label));
-                headerRow.appendChild(th);
-            });
-            // Add a header for the order column
-            const orderHeader = document.createElement("th");
-            orderHeader.textContent = "Order (boxes)";
-            headerRow.appendChild(orderHeader);
+                    // Render the table for the first time
+                    renderTable(allData);
+                })
+                .catch(err => {
+                    showMessage('Loading error: ' + err.message, 0); // Show this message permanently
+                });
+        }
 
-            const tbody = document.querySelector("#cigarTable tbody");
-            tbody.innerHTML = '';
-            if (data.length === 0) {
-                const tr = document.createElement("tr");
-                const td = document.createElement("td");
-                td.colSpan = TARGETS.length + 1; // +1 for the new order column
-                td.textContent = "No results found.";
-                td.style.textAlign = "center";
-                tr.appendChild(td);
-                tbody.appendChild(tr);
-            } else {
-                data.forEach(row => {
-                    const tr = document.createElement("tr");
-                    TARGETS.forEach((t) => {
-                        const td = document.createElement("td");
-                        td.textContent = row[t.label] || '';
-                        tr.appendChild(td);
-                    });
+        /**
+         * Renders the table with the provided data, including order buttons.
+         * @param {Array<Object>} data The array of data objects.
+         */
+        function renderTable(data) {
+            const headerRow = document.getElementById("headerRow");
+            headerRow.innerHTML = '';
+            TARGETS.forEach((t) => {
+                const th = document.createElement("th");
+                th.textContent = t.label;
+                th.addEventListener("click", () => sortTable(t.label));
+                headerRow.appendChild(th);
+            });
+            // Add a header for the order column
+            const orderHeader = document.createElement("th");
+            orderHeader.textContent = "Order (boxes)";
+            headerRow.appendChild(orderHeader);
 
-                    // Add the order column
-                    const orderTd = document.createElement("td");
-                    // Use a flexbox wrapper div to keep elements on one line
-                    orderTd.classList.add('order-controls'); 
-                    const orderInput = document.createElement("input");
-                    orderInput.type = "number";
-                    orderInput.min = "1";
-                    orderInput.value = "1";
-                    orderInput.style.width = "50px";
-                    const addButton = document.createElement("button");
-                    addButton.textContent = "Add";
-                    // Use the unique ID to find the correct product
-                    addButton.onclick = () => addToCart(row.id, parseInt(orderInput.value));
-                    orderTd.appendChild(orderInput);
-                    orderTd.appendChild(addButton);
-                    tr.appendChild(orderTd);
+            const tbody = document.querySelector("#cigarTable tbody");
+            tbody.innerHTML = '';
+            if (data.length === 0) {
+                const tr = document.createElement("tr");
+                const td = document.createElement("td");
+                td.colSpan = TARGETS.length + 1; // +1 for the new order column
+                td.textContent = "No results found.";
+                td.style.textAlign = "center";
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+            } else {
+                data.forEach(row => {
+                    const tr = document.createElement("tr");
+                    TARGETS.forEach((t) => {
+                        const td = document.createElement("td");
+                        td.textContent = row[t.label] || '';
+                        tr.appendChild(td);
+                    });
 
-                    tbody.appendChild(tr);
-                });
-            }
-        }
+                    // Add the order column
+                    const orderTd = document.createElement("td");
+                    // Use a flexbox wrapper div to keep elements on one line
+                    orderTd.classList.add('order-controls'); 
+                    const orderInput = document.createElement("input");
+                    orderInput.type = "number";
+                    orderInput.min = "1";
+                    orderInput.value = "1";
+                    orderInput.style.width = "50px";
+                    const addButton = document.createElement("button");
+                    addButton.textContent = "Add";
+                    // Use the unique ID to find the correct product
+                    addButton.onclick = () => addToCart(row.id, parseInt(orderInput.value));
+                    orderTd.appendChild(orderInput);
+                    orderTd.appendChild(addButton);
+                    tr.appendChild(orderTd);
 
-        // ===== Shopping cart functionality =====
-        /**
-         * Adds a product to the cart.
-         * @param {number} productId The ID of the product.
-         * @param {number} quantity The number of boxes to order.
-         */
-        function addToCart(productId, quantity) {
-            if (quantity <= 0 || isNaN(quantity)) {
-                showMessage("Box quantity must be greater than 0.", 3000);
-                return;
-            }
+                    tbody.appendChild(tr);
+                });
+            }
+        }
 
-            const existingItem = cart.find(item => item.id === productId);
-            const product = allData.find(item => item.id === productId);
+        // ===== Shopping cart functionality =====
+        /**
+         * Adds a product to the cart.
+         * @param {number} productId The ID of the product.
+         * @param {number} quantity The number of boxes to order.
+         */
+        function addToCart(productId, quantity) {
+            if (quantity <= 0 || isNaN(quantity)) {
+                showMessage("Box quantity must be greater than 0.", 3000);
+                return;
+            }
 
-            if (existingItem) {
-                existingItem.quantity += quantity;
-            } else {
-                cart.push({ ...product, quantity: quantity });
-            }
-            updateCartCount();
-            
-            // New message with more details and a 2-second duration
-            const brand2 = product['Brand 2'] || '';
-            const brand3 = product['Brand 3'] || '';
-            const size = product.Size || '';
-            const message = `Added to cart: ${quantity} x ${brand2} - ${brand3} (${size})`
-            showMessage(message, 2000); // 2 seconden
-        }
+            const existingItem = cart.find(item => item.id === productId);
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                const product = allData.find(item => item.id === productId);
+                cart.push({ ...product, quantity: quantity });
+            }
+            updateCartCount();
+            showMessage(`Product added to cart: ${quantity} x ${allData.find(item => item.id === productId)['Brand 2']}`);
+        }
 
-        /**
-         * Renders the shopping cart summary.
-         */
-        function renderCart() {
-            const cartList = document.getElementById("cartItemsList");
-            const cartTotalEl = document.getElementById("cartTotal");
-            cartList.innerHTML = '';
-            let total = 0;
+        /**
+         * Renders the shopping cart summary.
+         */
+        function renderCart() {
+            const cartList = document.getElementById("cartItemsList");
+            const cartTotalEl = document.getElementById("cartTotal");
+            cartList.innerHTML = '';
+            let total = 0;
 
-            if (cart.length === 0) {
-                cartList.innerHTML = '<li>Your cart is empty.</li>';
-                cartTotalEl.textContent = 'Total: €0.00';
-                return;
-            }
-            
-            cart.forEach(item => {
-                const li = document.createElement("li");
-                const priceString = item['€ Box'] || '0';
-                const boxPrice = parseFloat(priceString.replace(',', '.'));
-                const itemTotal = boxPrice * item.quantity;
-                total += itemTotal;
+            if (cart.length === 0) {
+                cartList.innerHTML = '<li>Your cart is empty.</li>';
+                cartTotalEl.textContent = 'Total: €0.00';
+                return;
+            }
+            
+            cart.forEach(item => {
+                const li = document.createElement("li");
+                const priceString = item['€ Box'] || '0';
+                const boxPrice = parseFloat(priceString.replace(',', '.'));
+                const itemTotal = boxPrice * item.quantity;
+                total += itemTotal;
 
-                li.innerHTML = `
-                    <div>
-                        <span>${item.quantity} x box of ${item['Brand']} - ${item['Brand 2']} - ${item['Brand 3']} (${item.Size})</span>
-                        <span>€${boxPrice.toFixed(2)}</span>
-                    </div>
-                    <div class="quantity-controls">
-                        <button onclick="updateQuantity(${item.id}, -1)">-</button>
-                        <span>${item.quantity}</span>
-                        <button onclick="updateQuantity(${item.id}, 1)">+</button>
-                        <button onclick="removeItem(${item.id})">Remove</button>
-                    </div>
-                `;
-                cartList.appendChild(li);
-            });
-            cartTotalEl.textContent = `Total: €${total.toFixed(2)}`;
-        }
-        
-        /**
-         * Updates the quantity of an item in the cart.
-         * @param {number} productId The ID of the product.
-         * @param {number} change The amount to add or remove.
-         */
-        function updateQuantity(productId, change) {
-            const item = cart.find(i => i.id === productId);
-            if (item) {
-                item.quantity += change;
-                if (item.quantity <= 0) {
-                    removeItem(productId);
-                }
-            }
-            renderCart();
-            updateCartCount();
-        }
+                li.innerHTML = `
+                    <div>
+                        <span>${item.quantity} x box of ${item['Brand']} - ${item['Brand 2']} - ${item['Brand 3']} (${item.Size})</span>
+                        <span>€${boxPrice.toFixed(2)}</span>
+                    </div>
+                    <div class="quantity-controls">
+                        <button onclick="updateQuantity(${item.id}, -1)">-</button>
+                        <span>${item.quantity}</span>
+                        <button onclick="updateQuantity(${item.id}, 1)">+</button>
+                        <button onclick="removeItem(${item.id})">Remove</button>
+                    </div>
+                `;
+                cartList.appendChild(li);
+            });
+            cartTotalEl.textContent = `Total: €${total.toFixed(2)}`;
+        }
+        
+        /**
+         * Updates the quantity of an item in the cart.
+         * @param {number} productId The ID of the product.
+         * @param {number} change The amount to add or remove.
+         */
+        function updateQuantity(productId, change) {
+            const item = cart.find(i => i.id === productId);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    removeItem(productId);
+                }
+            }
+            renderCart();
+            updateCartCount();
+        }
 
-        /**
-         * Removes an item from the cart.
-         * @param {number} productId The ID of the product.
-         */
-        function removeItem(productId) {
-            cart = cart.filter(item => item.id !== productId);
-            renderCart();
-            updateCartCount();
-        }
-        
-        /**
-         * Updates the item count in the cart button.
-         */
-        function updateCartCount() {
-            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-            document.getElementById("cartItemCount").textContent = count;
-        }
+        /**
+         * Removes an item from the cart.
+         * @param {number} productId The ID of the product.
+         */
+        function removeItem(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            renderCart();
+            updateCartCount();
+        }
+        
+        /**
+         * Updates the item count in the cart button.
+         */
+        function updateCartCount() {
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById("cartItemCount").textContent = count;
+        }
 
-        // ===== Navigation functionality =====
-        function showCatalog() {
-            document.getElementById("catalog").style.display = "block";
-            document.getElementById("cartSummary").style.display = "none";
-            document.getElementById("checkoutForm").style.display = "none";
-        }
+        // ===== Navigation functionality =====
+        function showCatalog() {
+            document.getElementById("catalog").style.display = "block";
+            document.getElementById("cartSummary").style.display = "none";
+            document.getElementById("checkoutForm").style.display = "none";
+        }
 
-        function showCart() {
-            document.getElementById("catalog").style.display = "none";
-            document.getElementById("cartSummary").style.display = "block";
-            document.getElementById("checkoutForm").style.display = "none";
-            renderCart();
-        }
+        function showCart() {
+            document.getElementById("catalog").style.display = "none";
+            document.getElementById("cartSummary").style.display = "block";
+            document.getElementById("checkoutForm").style.display = "none";
+            renderCart();
+        }
 
-        function showCheckout() {
-            if (cart.length === 0) {
-                showMessage("Your cart is empty. Please add products first.", 3000);
-                return;
-            }
+        function showCheckout() {
+            if (cart.length === 0) {
+                showMessage("Your cart is empty. Please add products first.", 3000);
+                return;
+            }
 
-            // Calculate the total
-            let total = 0;
-            cart.forEach(item => {
-                const priceString = item['€ Box'] || '0';
-                const boxPrice = parseFloat(priceString.replace(',', '.'));
-                total += boxPrice * item.quantity;
-            });
-            
-            // Calculate the deposit and round it up to the nearest ten
-            let deposit = total * 0.5;
-            deposit = Math.ceil(deposit / 10) * 10;
+            // Calculate the total
+            let total = 0;
+            cart.forEach(item => {
+                const priceString = item['€ Box'] || '0';
+                const boxPrice = parseFloat(priceString.replace(',', '.'));
+                total += boxPrice * item.quantity;
+            });
+            
+            // Calculate the deposit and round it up to the nearest ten
+            let deposit = total * 0.5;
+            deposit = Math.ceil(deposit / 10) * 10;
 
-            // Update the deposit text in the form
-            document.getElementById('depositAmount').textContent = `The deposit amount is: €${deposit.toFixed(2)}`;
-            
-            document.getElementById("catalog").style.display = "none";
-            document.getElementById("cartSummary").style.display = "none";
-            document.getElementById("checkoutForm").style.display = "block";
-        }
+            // Update the deposit text in the form
+            document.getElementById('depositAmount').textContent = `The deposit amount is: €${deposit.toFixed(2)}`;
+            
+            document.getElementById("catalog").style.display = "none";
+            document.getElementById("cartSummary").style.display = "none";
+            document.getElementById("checkoutForm").style.display = "block";
+        }
 
-        // ===== Send order =====
-        function sendOrder() {
-            const name = document.getElementById("customerName").value;
-            const email = document.getElementById("customerEmail").value;
-            const phone = document.getElementById("customerPhone").value;
-            const address = document.getElementById("customerAddress").value;
-            const notes = document.getElementById("customerNotes").value;
+        // ===== Send order =====
+        function sendOrder() {
+            const name = document.getElementById("customerName").value;
+            const email = document.getElementById("customerEmail").value;
+            const phone = document.getElementById("customerPhone").value;
+            const address = document.getElementById("customerAddress").value;
+            const notes = document.getElementById("customerNotes").value;
 
-            if (!name || !email) {
-                showMessage("Name and email are required fields.", 3000);
-                return;
-            }
+            if (!name || !email) {
+                showMessage("Name and email are required fields.", 3000);
+                return;
+            }
 
-            let orderDetails = "Order from " + name + "\n\n";
-            orderDetails += "Contact details:\n";
-            orderDetails += "Name: " + name + "\n";
-            orderDetails += "Email: " + email + "\n";
-            if (phone) orderDetails += "Phone: " + phone + "\n";
-            if (address) orderDetails += "Address: " + address + "\n";
-            if (notes) orderDetails += "\nNotes:\n" + notes + "\n";
-            orderDetails += "\nOrdered products:\n";
+            let orderDetails = "Order from " + name + "\n\n";
+            orderDetails += "Contact details:\n";
+            orderDetails += "Name: " + name + "\n";
+            orderDetails += "Email: " + email + "\n";
+            if (phone) orderDetails += "Phone: " + phone + "\n";
+            if (address) orderDetails += "Address: " + address + "\n";
+            if (notes) orderDetails += "\nNotes:\n" + notes + "\n";
+            orderDetails += "\nOrdered products:\n";
 
-            let total = 0;
-            cart.forEach(item => {
-                const priceString = item['€ Box'] || '0';
-                const boxPrice = parseFloat(priceString.replace(',', '.'));
-                const itemTotal = boxPrice * item.quantity;
-                total += itemTotal;
-                // Updated to include Brand, Brand 2, Brand 3, and Size
-                orderDetails += `- ${item.quantity} x box of ${item['Brand']} - ${item['Brand 2']} - ${item['Brand 3']} (${item.Size}) - €${boxPrice.toFixed(2)} per box\n`;
-            });
+            let total = 0;
+            cart.forEach(item => {
+                const priceString = item['€ Box'] || '0';
+                const boxPrice = parseFloat(priceString.replace(',', '.'));
+                const itemTotal = boxPrice * item.quantity;
+                total += itemTotal;
+                // Updated to include Brand, Brand 2, Brand 3, and Size
+                orderDetails += `- ${item.quantity} x box of ${item['Brand']} - ${item['Brand 2']} - ${item['Brand 3']} (${item.Size}) - €${boxPrice.toFixed(2)} per box\n`;
+            });
 
-            // Calculate the deposit and remaining amount
-            let deposit = total * 0.5;
-            deposit = Math.ceil(deposit / 10) * 10;
-            const remaining = total - deposit;
-            
-            // Add the amounts to the email body
-            orderDetails += `\nTotal order amount: €${total.toFixed(2)}`;
-            orderDetails += `\nDeposit paid: €${deposit.toFixed(2)}`;
-            orderDetails += `\nRemaining amount to pay: €${remaining.toFixed(2)}`;
+            // Calculate the deposit and remaining amount
+            let deposit = total * 0.5;
+            deposit = Math.ceil(deposit / 10) * 10;
+            const remaining = total - deposit;
+            
+            // Add the amounts to the email body
+            orderDetails += `\nTotal order amount: €${total.toFixed(2)}`;
+            orderDetails += `\nDeposit paid: €${deposit.toFixed(2)}`;
+            orderDetails += `\nRemaining amount to pay: €${remaining.toFixed(2)}`;
 
-            const subject = encodeURIComponent("Philbo Data Viewer Order - Order from " + name);
-            const body = encodeURIComponent(orderDetails);
+            const subject = encodeURIComponent("Philbo Data Viewer Order - Order from " + name);
+            const body = encodeURIComponent(orderDetails);
 
-            // Use window.open() to open the mailto link in a new tab
-            window.open(`mailto:info@philbo.be?subject=${subject}&body=${body}`, '_blank');
-            
-            // Show a message to inform the user and reset the cart
-            showMessage("Your order has been sent! An email client window should open.", 5000);
-            
-            // Reset the cart after sending
-            cart = [];
-            updateCartCount();
-            showCatalog();
-        }
+            // Use window.open() to open the mailto link in a new tab
+            window.open(`mailto:info@philbo.be?subject=${subject}&body=${body}`, '_blank');
+            
+            // Show a message to inform the user and reset the cart
+            showMessage("Your order has been sent! An email client window should open.", 5000);
+            
+            // Reset the cart after sending
+            cart = [];
+            updateCartCount();
+            showCatalog();
+        }
 
-        // ===== Search function =====
-        function filterTable() {
-            const search = document.getElementById("searchBox").value.toLowerCase();
-            const filteredData = allData.filter(row => {
-                return Object.values(row).some(cell => {
-                    return String(cell).toLowerCase().includes(search);
-                });
-            });
-            renderTable(filteredData);
-        }
+        // ===== Search function =====
+        function filterTable() {
+            const search = document.getElementById("searchBox").value.toLowerCase();
+            const filteredData = allData.filter(row => {
+                return Object.values(row).some(cell => {
+                    return String(cell).toLowerCase().includes(search);
+                });
+            });
+            renderTable(filteredData);
+        }
 
-        // ===== Sorting =====
-        function sortTable(key) {
-            const isAsc = currentSort.key !== key || !currentSort.asc;
-            currentSort = { key, asc: isAsc };
-            
-            // Sort the allData array
-            allData.sort((a, b) => {
-                const A = String(a[key] || '').trim();
-                const B = String(b[key] || '').trim();
-                
-                const numA = parseFloat(A.replace(/[^0-9.,-]/g, "").replace(",", "."));
-                const numB = parseFloat(B.replace(/[^0-9.,-]/g, "").replace(",", "."));
-                
-                let result = 0;
-                if (!isNaN(numA) && !isNaN(numB)) {
-                    result = numA - numB;
-                } else {
-                    result = A.localeCompare(B, 'en', { sensitivity: 'base' });
-                }
-                
-                return isAsc ? result : -result;
-            });
-            
-            // Render the sorted data
-            renderTable(allData);
-            
-            // Update the header class for visual indication
-            const headers = document.querySelectorAll("#headerRow th");
-            headers.forEach(h => {
-                h.classList.remove("sort-asc", "sort-desc");
-                if (h.textContent === key) {
-                    h.classList.add(isAsc ? "sort-asc" : "sort-desc");
-                }
-            });
-        }
+        // ===== Sorting =====
+        function sortTable(key) {
+            const isAsc = currentSort.key !== key || !currentSort.asc;
+            currentSort = { key, asc: isAsc };
+            
+            // Sort the allData array
+            allData.sort((a, b) => {
+                const A = String(a[key] || '').trim();
+                const B = String(b[key] || '').trim();
+                
+                const numA = parseFloat(A.replace(/[^0-9.,-]/g, "").replace(",", "."));
+                const numB = parseFloat(B.replace(/[^0-9.,-]/g, "").replace(",", "."));
+                
+                let result = 0;
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    result = numA - numB;
+                } else {
+                    result = A.localeCompare(B, 'en', { sensitivity: 'base' });
+                }
+                
+                return isAsc ? result : -result;
+            });
+            
+            // Render the sorted data
+            renderTable(allData);
+            
+            // Update the header class for visual indication
+            const headers = document.querySelectorAll("#headerRow th");
+            headers.forEach(h => {
+                h.classList.remove("sort-asc", "sort-desc");
+                if (h.textContent === key) {
+                    h.classList.add(isAsc ? "sort-asc" : "sort-desc");
+                }
+            });
+        }
 
-        // ===== Restrict copying/printing =====
-        document.addEventListener("keydown", function(e) {
-            const k = e.key.toLowerCase();
-            if (e.key === "PrintScreen" || (e.ctrlKey && (k === "c" || k === "p" || k === "s")) || (e.metaKey && (k === "c" || k === "p" || k === "s"))) {
-                e.preventDefault();
-                showMessage("Copying/printing/saving is blocked!", 0); // Permanent
-            }
-        });
-    </script>
+        // ===== Restrict copying/printing =====
+        document.addEventListener("keydown", function(e) {
+            const k = e.key.toLowerCase();
+            if (e.key === "PrintScreen" || (e.ctrlKey && (k === "c" || k === "p" || k === "s")) || (e.metaKey && (k === "c" || k === "p" || k === "s"))) {
+                e.preventDefault();
+                showMessage("Copying/printing/saving is blocked!", 0); // Permanent
+            }
+        });
+    </script>
 </body>
 </html>
