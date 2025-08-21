@@ -69,6 +69,12 @@
             text-align: left;
             color: #c0a16b;
         }
+        /* Ensure all table data is on a single line */
+        #cigarTable td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         th {
             background-color: #333;
             cursor: pointer;
@@ -200,15 +206,6 @@
         }
         #checkoutForm .payment-info a:hover {
             color: #ffcc00;
-        }
-
-        /* FIX: Custom style for the 'Size' column to prevent text wrapping.
-            This ensures the content of the 8th column stays on a single line. */
-        #cigarTable th:nth-child(7),
-        #cigarTable td:nth-child(7) {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
         
         /* New flexbox style for the order button and input field */
