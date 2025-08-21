@@ -175,6 +175,14 @@
             width: calc(100% - 10px);
             margin-bottom: 10px;
         }
+        .pickup-note {
+            background-color: #333;
+            border: 2px solid #c0a16b;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-style: italic;
+        }
         #checkoutForm .payment-info {
             background-color: #333;
             padding: 15px;
@@ -251,6 +259,9 @@
 
         <div id="checkoutForm" style="display:none;">
             <h3>Your Details</h3>
+            <div class="pickup-note">
+                <p>All orders must be picked up. It is forbidden by law to ship tobacco products.</p>
+            </div>
             <p>Please enter your details and place your order. The order will be sent to us via email.</p>
             <input type="text" id="customerName" placeholder="Name" required><br>
             <input type="email" id="customerEmail" placeholder="Email" required><br>
