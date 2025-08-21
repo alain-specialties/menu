@@ -5,21 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Philbo</title>
     <style>
-        /*
-         * Stijlen voor de pop-up voor leeftijdsverificatie.
-         * De pop-up is verborgen tot de pagina geladen is.
-         */
+        /* Algemene body en containerstijlen */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f0f0f0;
+            background-color: #f0f2f5;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            overflow: hidden; /* Voorkomt scrollen op de achtergrond */
         }
 
+        /* Stijlen voor de leeftijdsverificatiepop-up */
         .age-gate-overlay {
             position: fixed;
             top: 0;
@@ -27,7 +26,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.7);
-            display: none; /* Standaard verborgen */
+            display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
@@ -36,24 +35,25 @@
         .age-gate-content {
             background-color: #ffffff;
             color: #333333;
-            padding: 30px;
+            padding: 40px;
             border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             text-align: center;
-            max-width: 400px;
+            max-width: 450px;
             width: 90%;
+            transition: transform 0.3s ease-in-out;
         }
-
+        
         .age-gate-content h2 {
             margin-top: 0;
-            font-size: 1.5rem;
-            color: #444444;
+            font-size: 1.8rem;
+            color: #1a1a1a;
         }
 
         .age-gate-content p {
             font-size: 1rem;
             line-height: 1.6;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
         }
 
         .age-gate-buttons {
@@ -62,65 +62,107 @@
             gap: 15px;
         }
 
-        .age-gate-buttons button, .age-gate-buttons a {
-            padding: 12px 25px;
-            font-size: 1rem;
+        .age-gate-buttons button {
+            padding: 15px 30px;
+            font-size: 1.1rem;
             font-weight: bold;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             text-decoration: none;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        .age-gate-buttons a.confirm-btn {
-            background-color: #4CAF50; /* Groene kleur voor +18 */
+        .age-gate-buttons button.confirm-btn {
+            background-color: #28a745; /* Groene kleur */
             color: white;
         }
 
         .age-gate-buttons button.decline-btn {
-            background-color: #f44336; /* Rode kleur voor -18 */
+            background-color: #dc3545; /* Rode kleur */
             color: white;
         }
 
-        .age-gate-buttons button:hover, .age-gate-buttons a:hover {
-            transform: translateY(-2px);
-            opacity: 0.9;
+        .age-gate-buttons button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
         }
 
-        /*
-         * Stijlen voor de inlogpagina, om te laten zien hoe de site eruit ziet
-         * nadat de pop-up is gesloten.
-         */
+        /* Stijlen voor de inlogpagina */
         .login-page {
-            display: flex;
+            display: none; /* Standaard verborgen */
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            width: 100%;
             height: 100vh;
             text-align: center;
+            background-color: #f0f2f5;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .login-card {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 90%;
+            text-align: left;
+        }
+
+        .login-card h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 2rem;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
             color: #555;
-            background-color: #e9e9e9;
+            font-weight: bold;
         }
 
-        .login-page h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            transition: border-color 0.3s;
         }
 
-        .login-page p {
-            font-size: 1.2rem;
+        .form-group input:focus {
+            outline: none;
+            border-color: #28a745;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .login-btn:hover {
+            background-color: #218838;
         }
     </style>
 </head>
 <body>
-
-<!-- Hoofdpagina inhoud (deze is verborgen door de pop-up bij het laden) -->
-<div class="login-page" id="main-content" style="display:none;">
-    <h1>Welkom bij Philbo</h1>
-    <p>Dit is de inlogpagina. Je hebt de leeftijdsverificatie met succes doorstaan.</p>
-</div>
 
 <!-- Pop-up voor leeftijdsverificatie -->
 <div id="age-gate-modal" class="age-gate-overlay">
@@ -128,43 +170,51 @@
         <h2>Welcome to Philbo</h2>
         <p>To comply with regulations, we need to verify your age. Please confirm that you are 18 years or older to continue. Our site features information and products related to tobacco. We are committed to responsible use and appreciate your understanding.</p>
         <div class="age-gate-buttons">
-            <!-- De +18 knop die naar de login-content gaat -->
-            <a href="#" class="confirm-btn" onclick="confirmAge(); return false;">+18</a>
+            <!-- Knop om de leeftijd te bevestigen -->
+            <button class="confirm-btn" onclick="confirmAge()">+18</button>
             
-            <!-- De -18 knop die de pagina sluit -->
+            <!-- Knop om de pagina te sluiten -->
             <button class="decline-btn" onclick="declineAge()">-18</button>
         </div>
     </div>
 </div>
 
-<script>
-    // Haal de HTML-elementen op om mee te werken
-    const ageGateModal = document.getElementById('age-gate-modal');
-    const mainContent = document.getElementById('main-content');
+<!-- Inlogpagina inhoud -->
+<div id="login-page" class="login-page">
+    <div class="login-card">
+        <h1>Inloggen</h1>
+        <form action="#" method="post">
+            <div class="form-group">
+                <label for="username">Gebruikersnaam of E-mail</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Wachtwoord</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="login-btn">Log in</button>
+        </form>
+    </div>
+</div>
 
-    // Functie om de pop-up weer te geven bij het laden van de pagina
+<script>
+    // Haal de HTML-elementen op waarmee we zullen werken
+    const ageGateModal = document.getElementById('age-gate-modal');
+    const loginPage = document.getElementById('login-page');
+
+    // Functie die de pop-up toont wanneer de pagina geladen is
     window.onload = function() {
         ageGateModal.style.display = 'flex';
     };
 
-    // Functie voor de +18 knop. Verbergt de pop-up en toont de loginpagina.
+    // Functie voor de "+18" knop: verbergt de pop-up en toont de loginpagina
     function confirmAge() {
-        // Verberg de pop-up
         ageGateModal.style.display = 'none';
-        
-        // Toon de hoofdpagina-inhoud (de inlogpagina)
-        mainContent.style.display = 'flex';
-
-        // Dit is waar je de gebruiker zou omleiden naar de echte inlogpagina.
-        // Omdat we geen echte inlogpagina hebben, tonen we hier gewoon de inhoud.
-        // Als je een aparte login.html pagina hebt, kun je window.location.href = 'login.html'; gebruiken.
+        loginPage.style.display = 'flex';
     }
 
-    // Functie voor de -18 knop
+    // Functie voor de "-18" knop: probeert het huidige venster te sluiten
     function declineAge() {
-        // Probeert het huidige venster te sluiten.
-        // Opmerking: Dit werkt niet in alle browsers vanwege beveiligingsmaatregelen.
-        // Meestal werkt het alleen voor vensters die door JavaScript zijn geopend.
         window.close();
     }
 </script>
