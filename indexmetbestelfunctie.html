@@ -62,14 +62,12 @@
             border-collapse: collapse;
             margin-top: 15px;
             cursor: default;
-            table-layout: fixed; /* Ensures a fixed column layout */
         }
         th, td {
             border: 1px solid #555;
-            padding: 5px; /* Compact padding */
+            padding: 8px;
             text-align: left;
             color: #c0a16b;
-            font-size: 0.8em; /* Smaller font size */
         }
         /* Ensure all table data is on a single line */
         #cigarTable td {
@@ -481,7 +479,7 @@
         function checkLogin() {
             const user = document.getElementById("username").value.trim();
             const pass = document.getElementById("password").value.trim();
-            if (user === "Philbo" && pass === "sigaren2025") {
+            if (user === "Philbo" && pass === "sigaren2024") {
                 document.getElementById("loginBox").style.display = "none";
                 showAgeVerification(); // Show age verification after successful login
             } else {
