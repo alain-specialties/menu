@@ -98,7 +98,7 @@
         }
         
         /* New modal styles for error messages and notifications */
-        #messageModal {
+        #messageModal, #ageVerificationModal {
             display: none;
             position: fixed;
             z-index: 1000;
@@ -288,6 +288,14 @@
         <p id="messageText"></p>
       </div>
     </div>
+
+    <div id="ageVerificationModal">
+        <div class="modal-content">
+            <p>This website contains information about tobacco products. According to Belgian law, the sale of tobacco products is prohibited for persons under 18 years of age. By clicking 'Confirm', you declare that you are 18 years or older.</p>
+            <button onclick="confirmAge()">Confirm</button>
+            <button onclick="denyAge()">Cancel</button>
+        </div>
+    </div>
     
     <script>
         // Storage for loaded data and sorting status
@@ -451,14 +459,32 @@
             document.getElementById("messageModal").style.display = "none";
         }
 
+        // ===== Age verification functions =====
+        let isAgeConfirmed = false;
+        
+        function showAgeVerification() {
+            document.getElementById("ageVerificationModal").style.display = "flex";
+        }
+
+        function confirmAge() {
+            isAgeConfirmed = true;
+            document.getElementById("ageVerificationModal").style.display = "none";
+            // Now that the age is confirmed, we can proceed with the login
+            showCatalog();
+        }
+
+        function denyAge() {
+            window.location.href = "about:blank"; // Redirect to a blank page or a different URL
+        }
+
+
         // ===== Login check =====
         function checkLogin() {
             const user = document.getElementById("username").value.trim();
             const pass = document.getElementById("password").value.trim();
             if (user === "Philbo" && pass === "sigaren2025") {
                 document.getElementById("loginBox").style.display = "none";
-                document.getElementById("catalog").style.display = "block";
-                loadCSV();
+                showAgeVerification(); // Show age verification after successful login
             } else {
                 document.getElementById("loginError").innerText = "Invalid login!";
             }
@@ -665,12 +691,21 @@
 
         // ===== Navigation functionality =====
         function showCatalog() {
+            if (!isAgeConfirmed) {
+                showAgeVerification();
+                return;
+            }
             document.getElementById("catalog").style.display = "block";
             document.getElementById("cartSummary").style.display = "none";
             document.getElementById("checkoutForm").style.display = "none";
+            loadCSV();
         }
 
         function showCart() {
+            if (!isAgeConfirmed) {
+                showAgeVerification();
+                return;
+            }
             document.getElementById("catalog").style.display = "none";
             document.getElementById("cartSummary").style.display = "block";
             document.getElementById("checkoutForm").style.display = "none";
