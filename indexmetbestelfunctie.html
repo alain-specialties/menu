@@ -222,7 +222,7 @@
         <h1>Philbo Data Viewer</h1>
         <div id="loginBox">
             <h2>Login</h2>
-            <input type="text" id="Philbo" placeholder="sigaren2025"><br>
+            <input type="text" id="username" placeholder="Username"><br>
             <input type="password" id="password" placeholder="Password"><br>
             <button onclick="checkLogin()">Login</button>
             <p id="loginError" style="color:red;"></p>
@@ -558,5 +558,248 @@
             }
 
             const existingItem = cart.find(item => item.id === productId);
-            const product = allData.find(item => item.id ===
+            const product = allData.find(item => item.id === productId);
 
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({ ...product, quantity: quantity });
+            }
+            updateCartCount();
+
+            // Pas de pop-up melding aan om de merk- en maatdetails op te nemen en laat hem na 2 seconden sluiten
+            const brand2 = product['Brand 2'];
+            const brand3 = product['Brand 3'];
+            const size = product['Size'];
+            showMessage(`Product added to cart: ${quantity} x ${brand2} - ${brand3} (${size})`, 2000);
+        }
+
+        /**
+         * Renders the shopping cart summary.
+         */
+        function renderCart() {
+            const cartList = document.getElementById("cartItemsList");
+            const cartTotalEl = document.getElementById("cartTotal");
+            cartList.innerHTML = '';
+            let total = 0;
+
+            if (cart.length === 0) {
+                cartList.innerHTML = '<li>Your cart is empty.</li>';
+                cartTotalEl.textContent = 'Total: €0.00';
+                return;
+            }
+            
+            cart.forEach(item => {
+                const li = document.createElement("li");
+                const priceString = item['€ Box'] || '0';
+                const boxPrice = parseFloat(priceString.replace(',', '.'));
+                const itemTotal = boxPrice * item.quantity;
+                total += itemTotal;
+
+                li.innerHTML = `
+                    <div>
+                        <span>${item.quantity} x box of ${item['Brand']} - ${item['Brand 2']} - ${item['Brand 3']} (${item.Size})</span>
+                        <span>€${boxPrice.toFixed(2)}</span>
+                    </div>
+                    <div class="quantity-controls">
+                        <button onclick="updateQuantity(${item.id}, -1)">-</button>
+                        <span>${item.quantity}</span>
+                        <button onclick="updateQuantity(${item.id}, 1)">+</button>
+                        <button onclick="removeItem(${item.id})">Remove</button>
+                    </div>
+                `;
+                cartList.appendChild(li);
+            });
+            cartTotalEl.textContent = `Total: €${total.toFixed(2)}`;
+        }
+        
+        /**
+         * Updates the quantity of an item in the cart.
+         * @param {number} productId The ID of the product.
+         * @param {number} change The amount to add or remove.
+         */
+        function updateQuantity(productId, change) {
+            const item = cart.find(i => i.id === productId);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    removeItem(productId);
+                }
+            }
+            renderCart();
+            updateCartCount();
+        }
+
+        /**
+         * Removes an item from the cart.
+         * @param {number} productId The ID of the product.
+         */
+        function removeItem(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            renderCart();
+            updateCartCount();
+        }
+        
+        /**
+         * Updates the item count in the cart button.
+         */
+        function updateCartCount() {
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById("cartItemCount").textContent = count;
+        }
+
+        // ===== Navigation functionality =====
+        function showCatalog() {
+            document.getElementById("catalog").style.display = "block";
+            document.getElementById("cartSummary").style.display = "none";
+            document.getElementById("checkoutForm").style.display = "none";
+        }
+
+        function showCart() {
+            document.getElementById("catalog").style.display = "none";
+            document.getElementById("cartSummary").style.display = "block";
+            document.getElementById("checkoutForm").style.display = "none";
+            renderCart();
+        }
+
+        function showCheckout() {
+            if (cart.length === 0) {
+                showMessage("Your cart is empty. Please add products first.", 3000);
+                return;
+            }
+
+            // Calculate the total
+            let total = 0;
+            cart.forEach(item => {
+                const priceString = item['€ Box'] || '0';
+                const boxPrice = parseFloat(priceString.replace(',', '.'));
+                total += boxPrice * item.quantity;
+            });
+            
+            // Calculate the deposit and round it up to the nearest ten
+            let deposit = total * 0.5;
+            deposit = Math.ceil(deposit / 10) * 10;
+
+            // Update the deposit text in the form
+            document.getElementById('depositAmount').textContent = `The deposit amount is: €${deposit.toFixed(2)}`;
+            
+            document.getElementById("catalog").style.display = "none";
+            document.getElementById("cartSummary").style.display = "none";
+            document.getElementById("checkoutForm").style.display = "block";
+        }
+
+        // ===== Send order =====
+        function sendOrder() {
+            const name = document.getElementById("customerName").value;
+            const email = document.getElementById("customerEmail").value;
+            const phone = document.getElementById("customerPhone").value;
+            const address = document.getElementById("customerAddress").value;
+            const notes = document.getElementById("customerNotes").value;
+
+            if (!name || !email) {
+                showMessage("Name and email are required fields.", 3000);
+                return;
+            }
+
+            let orderDetails = "Order from " + name + "\n\n";
+            orderDetails += "Contact details:\n";
+            orderDetails += "Name: " + name + "\n";
+            orderDetails += "Email: " + email + "\n";
+            if (phone) orderDetails += "Phone: " + phone + "\n";
+            if (address) orderDetails += "Address: " + address + "\n";
+            if (notes) orderDetails += "\nNotes:\n" + notes + "\n";
+            orderDetails += "\nOrdered products:\n";
+
+            let total = 0;
+            cart.forEach(item => {
+                const priceString = item['€ Box'] || '0';
+                const boxPrice = parseFloat(priceString.replace(',', '.'));
+                const itemTotal = boxPrice * item.quantity;
+                total += itemTotal;
+                // Updated to include Brand, Brand 2, Brand 3, and Size
+                orderDetails += `- ${item.quantity} x box of ${item['Brand']} - ${item['Brand 2']} - ${item['Brand 3']} (${item.Size}) - €${boxPrice.toFixed(2)} per box\n`;
+            });
+
+            // Calculate the deposit and remaining amount
+            let deposit = total * 0.5;
+            deposit = Math.ceil(deposit / 10) * 10;
+            const remaining = total - deposit;
+            
+            // Add the amounts to the email body
+            orderDetails += `\nTotal order amount: €${total.toFixed(2)}`;
+            orderDetails += `\nDeposit paid: €${deposit.toFixed(2)}`;
+            orderDetails += `\nRemaining amount to pay: €${remaining.toFixed(2)}`;
+
+            const subject = encodeURIComponent("Philbo Data Viewer Order - Order from " + name);
+            const body = encodeURIComponent(orderDetails);
+
+            // Use window.open() to open the mailto link in a new tab
+            window.open(`mailto:info@philbo.be?subject=${subject}&body=${body}`, '_blank');
+            
+            // Show a message to inform the user and reset the cart
+            showMessage("Your order has been sent! An email client window should open.", 5000);
+            
+            // Reset the cart after sending
+            cart = [];
+            updateCartCount();
+            showCatalog();
+        }
+
+        // ===== Search function =====
+        function filterTable() {
+            const search = document.getElementById("searchBox").value.toLowerCase();
+            const filteredData = allData.filter(row => {
+                return Object.values(row).some(cell => {
+                    return String(cell).toLowerCase().includes(search);
+                });
+            });
+            renderTable(filteredData);
+        }
+
+        // ===== Sorting =====
+        function sortTable(key) {
+            const isAsc = currentSort.key !== key || !currentSort.asc;
+            currentSort = { key, asc: isAsc };
+            
+            // Sort the allData array
+            allData.sort((a, b) => {
+                const A = String(a[key] || '').trim();
+                const B = String(b[key] || '').trim();
+                
+                const numA = parseFloat(A.replace(/[^0-9.,-]/g, "").replace(",", "."));
+                const numB = parseFloat(B.replace(/[^0-9.,-]/g, "").replace(",", "."));
+                
+                let result = 0;
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    result = numA - numB;
+                } else {
+                    result = A.localeCompare(B, 'en', { sensitivity: 'base' });
+                }
+                
+                return isAsc ? result : -result;
+            });
+            
+            // Render the sorted data
+            renderTable(allData);
+            
+            // Update the header class for visual indication
+            const headers = document.querySelectorAll("#headerRow th");
+            headers.forEach(h => {
+                h.classList.remove("sort-asc", "sort-desc");
+                if (h.textContent === key) {
+                    h.classList.add(isAsc ? "sort-asc" : "sort-desc");
+                }
+            });
+        }
+
+        // ===== Restrict copying/printing =====
+        document.addEventListener("keydown", function(e) {
+            const k = e.key.toLowerCase();
+            if (e.key === "PrintScreen" || (e.ctrlKey && (k === "c" || k === "p" || k === "s")) || (e.metaKey && (k === "c" || k === "p" || k === "s"))) {
+                e.preventDefault();
+                showMessage("Copying/printing/saving is blocked!", 0); // Permanent
+            }
+        });
+    </script>
+</body>
+</html>
