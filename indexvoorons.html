@@ -377,8 +377,9 @@
                 .replace(/[^a-z0-9#]+/g, '');
         }
 
-        // Definitions of the desired columns and their possible names
+        // Definitions of the desired columns and their possible names, with 'Place' now at the beginning
         const TARGETS = [
+            { label: 'Place', keys: [] },
             { label: 'Stock', keys: ['stock', 'voorraad'], loose: ['qty', 'quantity'] },
             { label: 'Brand', keys: ['brand'] },
             { label: 'Brand 2', keys: ['brand2', 'brand_2', 'subbrand', 'lijn', 'line'] },
@@ -387,8 +388,6 @@
             { label: '€ Box', keys: ['eurbox', 'boxprice', 'prijsbox', 'prijsperbox', 'boxeur', 'eurperbox'] },
             { label: 'Size', keys: ['size', 'maat', 'afmeting', 'lengthring', 'format', 'vitola'] },
             { label: 'Country', keys: ['country', 'land', 'origin', 'herkomst', 'origine'] },
-            // New columns added here
-            { label: 'Place', keys: [] },
             { label: 'Distributor', keys: [] }
         ];
 
@@ -485,7 +484,7 @@
         function checkLogin() {
             const user = document.getElementById("username").value.trim();
             const pass = document.getElementById("password").value.trim();
-            if (user === "Philbo" && pass === "sigaren2024") {
+            if (user === "Philbo" && pass === "sigaren2025") { 
                 document.getElementById("loginBox").style.display = "none";
                 showAgeVerification(); // Show age verification after successful login
             } else {
